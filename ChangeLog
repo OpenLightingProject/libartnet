@@ -1,0 +1,73 @@
+26/8/2005 Simon Newton <nomis52@westnet.com.au>
+
+	* Fixed get_ifaces to return hw addrs correctly for aliased ifaces
+
+12/8/2005 Simon Newton <nomis52@westnet.com.au>
+
+    * Changed to a new error reporting scheme
+    * Applied patch from Samuli Valo to fix get_ifaces on x86-64
+		
+7/05/2005 Simon Newton <nomis52@westnet.com.au>
+
+   * fixed bug in number of ports reported
+   * included tod.h and misc.h :)
+   * fixed typo with IPV6  
+   * removed static path for pkgconfig data
+
+30/04/2005 Simon Newton <nomis52@westnet.com.au>
+
+   * minor cleanup, now reports numb of ports correctly
+
+30/04/2005 Simon Newton <nomis52@westnet.com.au>
+
+   * started adding RDM support
+
+25/04/2005 Simon Newton <nomis52@westnet.com.au>
+
+   * fixed the inet_aton bug
+
+18/04/2005 Simon Newton <nomis52@westnet.com.au>
+
+    * Added the endian conversion functions 
+
+12/04/2005 Simon Newton <nomis52@westnet.com.au>
+
+    * More OSX fixes
+
+9/04/2005 Simon Newton <nomis52@westnet.com.au>
+    
+    * Fixed the seg fault if no network interfaces are present
+
+18/3/2005 Simon Newton <nomis52@westnet.com.au>
+
+    * added artnet_destroy
+
+17/3/2005 Simon Newton <nomis52@westnet.com.au>
+   
+    * added c++ linking support
+
+16/3/2005 Simon Newton <nomis52@westnet.net>
+
+    * merged bugfixes from multicast branch to trunk
+
+27/2/2005 Simon Newton <nomis52@westnet.net>
+
+    * split examples from the library
+    * depricated artnet_init
+
+23/2/2005 Simon Newton <nomis52@westnet.net>
+
+    * added basic node joining support
+
+12/2/2005 Simon Newton <nomis52@westnet.net>
+
+    * Fixed compiler warnings
+    * Fixed minor problems relating to a node's ip address
+
+11/2/2005 Simon Newton <nomis52@westnet.net>
+
+    * Changed the licence to the LGPL
+    * Added new "debug" parameter to artnet_init() 
+    * Fixed LTP bug (L = latest not lowest as I orginally thought)
+    * Added firmware receive support - new example program artnet_firmware_node
+    * Added firmware send support - new example program artnet_firmware_server

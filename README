@@ -1,0 +1,5 @@
+
+Libartnet is an implementation of the ArtNet protocol. ArtNet allows the
+transmission of DMX and related data over IP networks.
+
+For installation notes see the INSTALL file.
