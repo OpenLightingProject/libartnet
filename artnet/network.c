@@ -485,7 +485,7 @@ e_bind2:
 	
 e_socket2:
 e_bind1:
-	close(n->sd[2]) ;
+	close(n->sd[1]) ;
 
 e_socket1:
 	return ret ;
