@@ -153,7 +153,7 @@ int artnet_start(artnet_node vn) {
 	}
 
 e_exit:
-	return 0 ;
+	return ret ;
 }
 
 /**
@@ -177,9 +177,6 @@ int artnet_stop(artnet_node vn) {
 	
 	n->state.mode = ARTNET_STANDBY ;
 
-	if(n->state.verbose)
-		printf("turning off\n") ;
-	
 	return ARTNET_EOK; 
 }
 
@@ -1155,6 +1152,7 @@ int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t set
 int artnet_set_port_addr(artnet_node vn, int id, artnet_port_dir_t dir, uint8_t addr) {
 	node n = (node) vn ;
 	int ret ;
+	int changed = 0 ;
 	
 	g_port_t *port ;
 	
@@ -1172,9 +1170,11 @@ int artnet_set_port_addr(artnet_node vn, int id, artnet_port_dir_t dir, uint8_t 
 
 	if(dir == ARTNET_INPUT_PORT) {
 		port = &n->ports.in[id].port ;
+		changed = n->ports.in[id].port_enabled?0:1 ;
 		n->ports.in[id].port_enabled = TRUE ;		
 	} else if( dir == ARTNET_OUTPUT_PORT) {
 		port = &n->ports.out[id].port ;
+		changed = n->ports.out[id].port_enabled?0:1 ;		
 		n->ports.out[id].port_enabled = TRUE ;
 	} else {
 		artnet_error("%s : Invalid port direction\n", __FUNCTION__) ;
@@ -1184,7 +1184,7 @@ int artnet_set_port_addr(artnet_node vn, int id, artnet_port_dir_t dir, uint8_t 
 	port->default_addr = addr ;
 	
 	// if not under network control and address is changing
-	if(! port->net_ctl && (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE)) {
+	if(! port->net_ctl && (changed || (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE)) ) {
 		port->addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE) ;
 
 		// reset seq if input port

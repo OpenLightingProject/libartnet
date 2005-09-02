@@ -1,3 +1,7 @@
+28/8/2005 Simon Newton <nomis52@westnet.com.au>
+
+    * Fixed error handling in net_start
+
 26/8/2005 Simon Newton <nomis52@westnet.com.au>
 
 	* Fixed get_ifaces to return hw addrs correctly for aliased ifaces

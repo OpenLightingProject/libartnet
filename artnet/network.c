@@ -105,7 +105,6 @@ static int get_ifaces(iface_t **ift_head_r) {
 	struct sockaddr_ll *sll;
 	char *if_name, *cptr;
 
-	ifa_iter = 0;
 	if( getifaddrs(&ifa) != 0) {
 		artnet_error("Error getting interfaces: %s", strerror(errno));
 		return ARTNET_ENET;
@@ -151,7 +150,8 @@ static int get_ifaces(iface_t **ift_head_r) {
 				memcpy(if_iter->hw_addr , sll->sll_addr, 6);
 				break;
 			}
-		}		
+		}
+		free(if_name) ;
 	}
 
 
@@ -481,11 +481,11 @@ int artnet_net_start(node n) {
 
 e_setsockopt:
 e_bind2:
-	close(n->sd[2]) ;
+	close(n->sd[1]) ;
 	
 e_socket2:
 e_bind1:
-	close(n->sd[1]) ;
+	close(n->sd[0]) ;
 
 e_socket1:
 	return ret ;
@@ -541,14 +541,16 @@ int artnet_net_recv(node n, artnet_packet  p, int delay) {
 			return ARTNET_EOK;			
 			break ;
 		default:
-			if(FD_ISSET(n->sd[0], &rset)  )
+			if(FD_ISSET(n->sd[0], &rset)  ) {
 				active_sd = n->sd[0] ;
 				p->to = n->state.ip_addr;
-
-			if(FD_ISSET(n->sd[1], &rset) )
+			}
+			
+			if(FD_ISSET(n->sd[1], &rset) ) {
 				active_sd = n->sd[1] ;
 				p->to = n->state.bcast_addr;
-			
+			}
+
 			break;
 	}
 	
