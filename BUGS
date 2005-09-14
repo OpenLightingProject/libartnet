@@ -6,3 +6,16 @@
 
 
 * Missing "Art-Net\0" for RDM packet
+
+
+
+gcc -DHAVE_CONFIG_H -I. -I. -I.. -I.. -I.. -Wall -Werror -Wformat -W -g -O2 -MT network.lo -MD -MP -MF .deps/network.Tpo -c network.c  -fno-common -DPIC -o .libs/network.o
+network.c:41:30: error: linux/if_packet.h: No such file or directory
+network.c: In function 'get_ifaces':
+network.c:145: error: 'AF_PACKET' undeclared (first use in this function)
+network.c:145: error: (Each undeclared identifier is reported only once
+network.c:145: error: for each function it appears in.)
+network.c:151: error: dereferencing pointer to incomplete type
+cc1: warnings being treated as errors
+network.c: In function 'artnet_net_recv':
+network.c:558: warning: pointer targets in passing argument 6 of 'recvfrom' differ in signedness

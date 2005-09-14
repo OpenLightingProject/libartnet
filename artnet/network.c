@@ -36,7 +36,14 @@ typedef struct iface_s {
 	struct iface_s *next ;
 } iface_t ;
 
+
 #ifdef HAVE_GETIFADDRS
+ #ifdef HAVE_LINUX_IF_PACKET_H
+   #define USE_GETIFADDRS
+ #endif
+#endif
+
+#ifdef USE_GETIFADDRS
 	#include <ifaddrs.h>
 	#include <linux/if_packet.h>
 #endif
@@ -55,7 +62,7 @@ static void free_ifaces(iface_t *head) {
 
 }
 
-#ifdef HAVE_GETIFADDRS
+#ifdef USE_GETIFADDRS
 
 /*
  * check if we are interested in this interface

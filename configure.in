@@ -4,7 +4,7 @@
 AC_PREREQ(2.57)
 AC_INIT(configure.in)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(libartnet, 0.1.14-rc3)
+AM_INIT_AUTOMAKE(libartnet, 0.1.14-rc4)
 
 # Checks for programs.
 AC_PROG_CC
@@ -16,7 +16,7 @@ AC_PROG_LIBTOOL
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([endian.h ppc/endian.h arpa/inet.h netinet/in.h stdlib.h string.h sys/ioctl.h sys/socket.h unistd.h])
+AC_CHECK_HEADERS([endian.h ppc/endian.h arpa/inet.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h unistd.hi linux/if_packet.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -28,9 +28,10 @@ AC_HEADER_STDBOOL
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
+AC_FUNC_REALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([inet_ntoa memset select socket strerror])
+AC_CHECK_FUNCS([inet_ntoa memset select socket strchr strdup strerror])
 AC_CHECK_FUNCS(getifaddrs) 
 
 # check for ipv6 support - taken from unp
