@@ -521,7 +521,7 @@ int artnet_net_set_fdset(node n, fd_set *fdset) {
 int artnet_net_recv(node n, artnet_packet  p, int delay) {
 	ssize_t     len;
 	struct sockaddr_in cliAddr ;
-	int cliLen = sizeof(cliAddr) ;
+	socklen_t cliLen = sizeof(cliAddr) ;
 	fd_set rset ;
 	struct timeval tv ;
 	int active_sd = 0 ;

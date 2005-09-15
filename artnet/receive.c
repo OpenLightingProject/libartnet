@@ -830,10 +830,6 @@ int handle(node n, artnet_packet p) {
 		case ARTNET_MEDIACONTROLREPLY:
 			printf("media control reply\n") ;
 			break;
-		case -1:
-			printf("not an ArtNet packet\n") ;
-			return -1 ;
-			break;
 		default:
 			n->state.report_code = ARTNET_RCPARSEFAIL ;
 			printf("artnet but not yet implemented!, op was %hx\n", p->type) ;
