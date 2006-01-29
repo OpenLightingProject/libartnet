@@ -392,7 +392,7 @@ int handle_address(node n, artnet_packet p) {
  * ArtInput packets can disable input ports.
  *
  */
-int handle_input(node n, artnet_packet p) {
+int _artnet_handle_input(node n, artnet_packet p) {
 	int i, ports, ret ;
 	
 	if(check_callback(n, p, n->callbacks.input) )
@@ -780,7 +780,7 @@ int handle(node n, artnet_packet p) {
 			handle_address(n,p) ;
 			break;
 		case ARTNET_INPUT:
-			handle_input(n,p);
+			_artnet_handle_input(n,p);
 			break ;
 		case ARTNET_TODREQUEST:
 			handle_tod_request(n,p) ;
