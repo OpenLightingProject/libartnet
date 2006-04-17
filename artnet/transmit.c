@@ -420,7 +420,7 @@ int artnet_tx_build_art_poll_reply(node n) {
 	ar->sp3 =  0;
 
 	// hw address
-	memcpy(	&ar->mac, &n->state.hw_addr, 6)  ;
+	memcpy(	&ar->mac, &n->state.hw_addr, ARTNET_MAC_SIZE)  ;
 	
 	// set style
 	switch (n->state.node_type) {

@@ -1,3 +1,19 @@
+17/4/2006 libartnet-1.0.1
+
+ Fixed the ArtPollReply length bug
+
+30/3/2006 libartnet-1.0.0
+
+ Version 1.0 release
+
+16/9/2005 libartnet-0.1.14-rc4
+
+ Now compiles on OS X (again)
+
+28/8/2005 libartnet-0.1.14-rc3
+
+ Bug fixes to net_start
+
 23/8/2005 libartnet-0.1.14-rc2
 
  Bug fixes to get_ifaces

@@ -1,3 +1,11 @@
+17/4/2006 Simon Newton <<nomis52@westnet.com.au>
+
+	* Fixed ArtPollReply length bug
+
+16/9/2005 Simon Newton <<nomis52@westnet.com.au>
+
+	* Fixed compile issues on OS X
+
 28/8/2005 Simon Newton <nomis52@westnet.com.au>
 
     * Fixed error handling in net_start
