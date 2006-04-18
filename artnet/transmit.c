@@ -382,9 +382,11 @@ int artnet_tx_build_art_poll_reply(node n) {
 
 	// status need to be recalc everytime
 	//ar->status 
-	// what can we used for this ?
-	ar->etsaman[0] = 's';
-	ar->etsaman[1] = 'n';
+	
+	// ESTA Manufacturer ID
+	// Assigned 18/4/2006
+	ar->etsaman[0] = 'z';
+	ar->etsaman[1] = 'p';
 		
 	memcpy(&ar->shortname, &n->state.short_name, sizeof(n->state.short_name) ) ;	
 	memcpy(&ar->longname, &n->state.long_name, sizeof(n->state.long_name) ) ;
