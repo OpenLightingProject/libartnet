@@ -1,3 +1,8 @@
+17/4/2006 libartnet-1.0.2
+
+ Introduced compatability mode for devices like the Martin Ether2DMX which
+  send to 255.255.255.255
+
 17/4/2006 libartnet-1.0.1
 
  Fixed the ArtPollReply length bug

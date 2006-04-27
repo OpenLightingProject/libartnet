@@ -37,11 +37,11 @@ artnet_node artnet_init(const char *ip, int debug) {
 
 	// we'll printf here so someone notices
 	printf("Warning: Calling deprecated function artnet_init") ;
-	return artnet_new(ip, debug) ;
+	return artnet_new_c(ip, debug,0) ;
 
 }
 
-		
+
 /** 
  * Creates a new ArtNet node.
  * Takes a string containing the ip address to bind to, if the string is NULL 
@@ -51,7 +51,23 @@ artnet_node artnet_init(const char *ip, int debug) {
  * @param debug level of logging provided 0: none
  * @return an artnet_node, or NULL on failure
  */
-artnet_node artnet_new(const char *ip, int debug) {
+artnet_node artnet_new(const char *ip, int verbose) {
+	return artnet_new_c(ip, verbose, 0) ;
+}
+
+
+
+/** 
+ * Creates a new ArtNet node.
+ * Takes a string containing the ip address to bind to, if the string is NULL 
+ * it uses the first non loopback address
+ *
+ * @param ip 		the IP address to bind to
+ * @param debug 	level of logging provided 0: none
+ * @param compat	use compatability mode (listen on all interfaces rather than the one specified)
+ * @return an artnet_node, or NULL on failure
+ */
+extern artnet_node artnet_new_c(const char *ip, int verbose, int compat) {
 	node n ;
 	int i ;
 	
@@ -69,9 +85,13 @@ artnet_node artnet_new(const char *ip, int debug) {
 	n->node_list.current = NULL ;
 	n->node_list.last = NULL ;
 	n->node_list.length = 0;
-	n->state.verbose = debug ;
+	n->state.verbose = verbose ;
+	n->state.compat = compat ;
 	n->peering.peer = NULL ;
 	n->peering.master = TRUE ;
+
+	n->sd[0] = -1;
+	n->sd[1] = -1;
 
 	if ( artnet_net_init(n, ip) ) {
 		goto e_free ;
@@ -104,7 +124,11 @@ e_free:
 	n = NULL ;
 e_exit :
 	return n;
+
 }
+
+
+		
 
 /**
  * Starts the ArtNet node.
@@ -278,6 +302,11 @@ int artnet_read(artnet_node vn, int timeout) {
  * Then the nodes must be joined so that they can share the socket
  * bound to the broadcast address.
  *
+ * The other option is to use compatability mode (this still requires
+ * a aliased interface - but doesn't require multiple nodes to be started), 
+ * see the compat option to artnet_new
+ *
+ *
  * @param vn1 The artnet node
  * @param vn2 The second artnet node
  *
@@ -290,6 +319,11 @@ int artnet_join(artnet_node vn1, artnet_node vn2) {
 	
 	node n1 = (node) vn1 ;
 	node n2 = (node) vn2 ;
+
+	if(n1->state.compat || n2->state.compat ) {
+		artnet_error("%s : Join failed, at least one node in compat mode", __FUNCTION__ ) ;
+		return ARTNET_ESTATE ;
+	}
 
 	if(n1->peering.peer == NULL && n2->peering.peer == NULL) {
 		n1->peering.peer = n2 ;

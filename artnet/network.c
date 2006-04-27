@@ -424,7 +424,7 @@ int artnet_net_start(node n) {
 	int bcast_flag = TRUE ;
 	node tmp ;
 	int ret = ARTNET_EOK ;
-	
+
 	/* create socket */
 	n->sd[0] = socket(PF_INET  ,SOCK_DGRAM , 0 ) ;
 	
@@ -437,8 +437,16 @@ int artnet_net_start(node n) {
 	memset(&servAddr, 0x00, sizeof(servAddr) ) ;
 	servAddr.sin_family = AF_INET ;
 	servAddr.sin_port = htons(ARTNET_PORT) ;
-	servAddr.sin_addr.s_addr = n->state.ip_addr.s_addr ;
 
+	if(n->state.compat) {
+		// we're running in compat mode
+		// bind to the wildcard address
+		servAddr.sin_addr.s_addr = htonl(INADDR_ANY) ;
+
+	} else {
+		servAddr.sin_addr.s_addr = n->state.ip_addr.s_addr ;
+	}
+	
 	if( n->state.verbose) 
 		printf("Binding to %s \n" , inet_ntoa(servAddr.sin_addr)  );
 	
@@ -451,8 +459,8 @@ int artnet_net_start(node n) {
 		goto e_bind1;
 	}
 
-	// only attempt to bind to the broadcast if we are the group master
-	if(n->peering.master == TRUE) {
+	// only attempt to bind to the broadcast if we are not in compat and are the group master
+	if(! n->state.compat && n->peering.master == TRUE) {
 		n->sd[1] = socket(PF_INET  ,SOCK_DGRAM , 0 ) ;
 
 		if(n->sd[1] < 0) {
@@ -507,7 +515,8 @@ int artnet_net_set_fdset(node n, fd_set *fdset) {
  	int maxfdp1 ;
  	
  	FD_SET(n->sd[0], fdset) ;
- 	FD_SET(n->sd[1], fdset) ;
+ 	if( n->sd[1] != -1) 
+		FD_SET(n->sd[1], fdset) ;
  	
  	maxfdp1 = max(n->sd[0] , n->sd[1]) + 1;
  	return maxfdp1 ;
@@ -553,7 +562,7 @@ int artnet_net_recv(node n, artnet_packet  p, int delay) {
 				p->to = n->state.ip_addr;
 			}
 			
-			if(FD_ISSET(n->sd[1], &rset) ) {
+			if(n->sd[1] != -1 && FD_ISSET(n->sd[1], &rset) ) {
 				active_sd = n->sd[1] ;
 				p->to = n->state.bcast_addr;
 			}
@@ -650,7 +659,7 @@ int artnet_net_close(node n) {
 		return ARTNET_ENET ;
 	}
 
-	if (close(n->sd[1])) {
+	if (n->sd[1] != -1 && close(n->sd[1])) {
 		artnet_error(strerror(errno)) ;
 		return ARTNET_ENET ;
 	}
@@ -660,7 +669,9 @@ int artnet_net_close(node n) {
 // n2 is joining n1's group
 // n1 is the group master
 int artnet_net_join(node n1, node n2) {
-	close(n2->sd[1]) ;
+	if(n2->sd[1] != -1) 
+		close(n2->sd[1]) ;
+
 	n2->sd[1] = n1->sd[1] ;
 
 	return ARTNET_EOK ;

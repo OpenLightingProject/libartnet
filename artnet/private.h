@@ -415,15 +415,17 @@ typedef struct {
 	SI ip_addr;
 	SI bcast_addr ;
 	uint8_t hw_addr[6] ;
+	uint8_t default_subnet ;
+	uint8_t subnet_net_ctl ;
 	int send_apr_on_change;
+	int ar_count ;
+	int verbose ;
+	int compat ;
 	char short_name[ARTNET_SHORT_NAME_LENGTH] ;
 	char long_name[ARTNET_LONG_NAME_LENGTH] ;
 	char report[ARTNET_REPORT_LENGTH] ;
-	int ar_count ;
 	uint8_t subnet ;
-	uint8_t default_subnet ;
-	uint8_t subnet_net_ctl ;
-	int verbose ;
+	
 
 	artnet_node_report_code report_code;
 } node_state_t ;
