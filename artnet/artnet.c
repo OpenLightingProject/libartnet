@@ -219,7 +219,8 @@ int artnet_destroy(artnet_node vn) {
 
 	// free any memory associated with firmware transfers
 	for( ent = n->node_list.first; ent != NULL;  ent = tmp) {
-		free( ent->firmware.data) ;
+		if (ent->firmware.data != NULL ) 
+			free( ent->firmware.data) ;
 		tmp = ent->next ;
 		free(ent) ;
 	}
@@ -1454,7 +1455,7 @@ int artnet_nl_update(node_list_t *nl, artnet_packet reply) {
 			return ARTNET_EMEM ;
 		}
 	
-		memset( entry , 0x00, sizeof(entry) ) ;
+		memset( entry , 0x00, sizeof(node_entry_private_t) ) ;
 
 		copy_apr_to_node_entry(&entry->pub, &reply->data.ar) ;
 		entry->ip = reply->from ;
