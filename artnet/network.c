@@ -15,7 +15,7 @@
  *
  * network.c
  * Network code for libartnet
- * Copyright (C) 2004-2005 Simon Newton
+ * Copyright (C) 2004-2006 Simon Newton
  *
  */
 
@@ -597,6 +597,13 @@ int artnet_net_reprogram(node n) {
 	free_ifaces(ift_head) ;
 
 }*/
+
+
+int artnet_net_set_fdset (node n, fd_set *fdset) {
+
+	FD_SET(n->sd , fdset) ;
+	return ARTNET_EOK ;
+}
 
 
 int artnet_net_close(node n) {
