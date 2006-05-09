@@ -37,7 +37,7 @@ artnet_node artnet_init(const char *ip, int debug) {
 
 	// we'll printf here so someone notices
 	printf("Warning: Calling deprecated function artnet_init") ;
-	return artnet_new_c(ip, debug,0) ;
+	return artnet_new(ip, debug) ;
 
 }
 
@@ -52,22 +52,6 @@ artnet_node artnet_init(const char *ip, int debug) {
  * @return an artnet_node, or NULL on failure
  */
 artnet_node artnet_new(const char *ip, int verbose) {
-	return artnet_new_c(ip, verbose, 0) ;
-}
-
-
-
-/** 
- * Creates a new ArtNet node.
- * Takes a string containing the ip address to bind to, if the string is NULL 
- * it uses the first non loopback address
- *
- * @param ip 		the IP address to bind to
- * @param debug 	level of logging provided 0: none
- * @param compat	use compatability mode (listen on all interfaces rather than the one specified)
- * @return an artnet_node, or NULL on failure
- */
-extern artnet_node artnet_new_c(const char *ip, int verbose, int compat) {
 	node n ;
 	int i ;
 	
@@ -86,12 +70,10 @@ extern artnet_node artnet_new_c(const char *ip, int verbose, int compat) {
 	n->node_list.last = NULL ;
 	n->node_list.length = 0;
 	n->state.verbose = verbose ;
-	n->state.compat = compat ;
 	n->peering.peer = NULL ;
 	n->peering.master = TRUE ;
 
-	n->sd[0] = -1;
-	n->sd[1] = -1;
+	n->sd = -1;
 
 	if ( artnet_net_init(n, ip) ) {
 		goto e_free ;
@@ -275,18 +257,15 @@ int artnet_read(artnet_node vn, int timeout) {
 		if (p.length == 0)
 			continue ;
 
-		// this packet was broadcast check timeouts on our peers
-		if(p.to.s_addr == n->state.bcast_addr.s_addr)
-			for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer ) 
-				check_timeouts(tmp) ;
+		for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer ) 
+			check_timeouts(tmp) ;
 		
 
 		if( p.length > MIN_PACKET_SIZE && get_type(&p) ) {
 			handle(n, &p) ;
-			if(p.to.s_addr == n->state.bcast_addr.s_addr)
-				for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer )  {
-					handle(tmp, &p) ;
-				}
+			for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer )  {
+				handle(tmp, &p) ;
+			}
 		} 
 	} ;
 	return ARTNET_EOK ;
@@ -303,10 +282,6 @@ int artnet_read(artnet_node vn, int timeout) {
  * Then the nodes must be joined so that they can share the socket
  * bound to the broadcast address.
  *
- * The other option is to use compatability mode (this still requires
- * a aliased interface - but doesn't require multiple nodes to be started), 
- * see the compat option to artnet_new
- *
  *
  * @param vn1 The artnet node
  * @param vn2 The second artnet node
@@ -320,11 +295,6 @@ int artnet_join(artnet_node vn1, artnet_node vn2) {
 	
 	node n1 = (node) vn1 ;
 	node n2 = (node) vn2 ;
-
-	if(n1->state.compat || n2->state.compat ) {
-		artnet_error("%s : Join failed, at least one node in compat mode", __FUNCTION__ ) ;
-		return ARTNET_ESTATE ;
-	}
 
 	if(n1->peering.peer == NULL && n2->peering.peer == NULL) {
 		n1->peering.peer = n2 ;
@@ -1320,18 +1290,15 @@ int artnet_dump_config(artnet_node vn) {
  * @param socket the index of the socket descriptor to fetch (0 or 1)
  * @return the socket descriptor
  */
-int artnet_get_sd(artnet_node vn, int socket) {
+int artnet_get_sd(artnet_node vn) {
 	node n = (node) vn ;
 
 	check_nullnode(vn) ;
 
-	if(socket < 0 || socket > 1) 
-		return ARTNET_EARG ;
-	
 	if( n->state.mode != ARTNET_ON)
 		return ARTNET_EACTION ;
 
-	return n->sd[socket] ;
+	return n->sd ;
 }
 
 /**

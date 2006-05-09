@@ -425,102 +425,59 @@ int artnet_net_start(node n) {
 	node tmp ;
 	int ret = ARTNET_EOK ;
 
-	/* create socket */
-	n->sd[0] = socket(PF_INET  ,SOCK_DGRAM , 0 ) ;
-	
-	if(n->sd[0] <0) {
-		artnet_error("Could not create socket %s", strerror(errno) );
-		ret = ARTNET_ENET ;
-		goto e_socket1;
-	}
-
-	memset(&servAddr, 0x00, sizeof(servAddr) ) ;
-	servAddr.sin_family = AF_INET ;
-	servAddr.sin_port = htons(ARTNET_PORT) ;
-
-	if(n->state.compat) {
-		// we're running in compat mode
-		// bind to the wildcard address
-		servAddr.sin_addr.s_addr = htonl(INADDR_ANY) ;
-
-	} else {
-		servAddr.sin_addr.s_addr = n->state.ip_addr.s_addr ;
-	}
-	
-	if( n->state.verbose) 
-		printf("Binding to %s \n" , inet_ntoa(servAddr.sin_addr)  );
-	
-	/* bind sockets 
-	 * we do one for the ip address and one for the broadcast address
-	 */
-	if( bind(n->sd[0], (SA *) &servAddr, sizeof(servAddr)) == -1  ) {
-		artnet_error("Failed to bind to socket %s", strerror(errno) ) ;
-		ret = ARTNET_ENET ;
-		goto e_bind1;
-	}
 
 	// only attempt to bind to the broadcast if we are not in compat and are the group master
-	if(! n->state.compat && n->peering.master == TRUE) {
-		n->sd[1] = socket(PF_INET  ,SOCK_DGRAM , 0 ) ;
+	if( n->peering.master == TRUE) {
 
-		if(n->sd[1] < 0) {
+		/* create socket */
+		n->sd = socket(PF_INET  ,SOCK_DGRAM , 0 ) ;
+	
+		if(n->sd <0) {
 			artnet_error("Could not create socket %s", strerror(errno) );
 			ret = ARTNET_ENET ;
-			goto e_socket2 ;
+			goto e_socket1;
 		}
-		servAddr.sin_addr.s_addr = n->state.bcast_addr.s_addr ;
 
-		if(n->state.verbose) 
-			printf("binding to %s \n" , inet_ntoa(servAddr.sin_addr)  );
+		memset(&servAddr, 0x00, sizeof(servAddr) ) ;
+		servAddr.sin_family = AF_INET ;
+		servAddr.sin_port = htons(ARTNET_PORT) ;
+		servAddr.sin_addr.s_addr = htonl(INADDR_ANY) ;
 
-		if( bind(n->sd[1], (SA *) &servAddr, sizeof(servAddr)) < 0  ) {
+		if( n->state.verbose) 
+			printf("Binding to %s \n" , inet_ntoa(servAddr.sin_addr)  );
+	
+		/* bind sockets 
+		 * we do one for the ip address and one for the broadcast address
+		 */
+		if( bind(n->sd, (SA *) &servAddr, sizeof(servAddr)) == -1  ) {
+			artnet_error("Failed to bind to socket %s", strerror(errno) ) ;
+			ret = ARTNET_ENET ;
+			goto e_bind1;
+		}
+
+		// allow bcasting
+		if( setsockopt(n->sd, SOL_SOCKET, SO_BROADCAST, &bcast_flag, sizeof(int) ) == -1) {
 			artnet_error("Failed to bind to socket %s", strerror(errno) ) ;
 			ret =  ARTNET_ENET ;
-			goto e_bind2;
+			goto e_setsockopt ;
 		}
 		
-		// now we need to propagate sd[1] to all our peers
+		// now we need to propagate the sd to all our peers
 		for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer ) 
-			tmp->sd[1] = n->sd[1] ;
-
-	}
-
-	// allow bcasting
-	if( setsockopt(n->sd[0], SOL_SOCKET, SO_BROADCAST, &bcast_flag, sizeof(int) ) == -1) {
-		artnet_error("Failed to bind to socket %s", strerror(errno) ) ;
-		ret =  ARTNET_ENET ;
-		goto e_setsockopt ;
+			tmp->sd = n->sd ;
+		
 	}
 
 	return ARTNET_EOK ;
 
 e_setsockopt:
-e_bind2:
-	close(n->sd[1]) ;
-	
-e_socket2:
 e_bind1:
-	close(n->sd[0]) ;
+	close(n->sd) ;
 
 e_socket1:
 	return ret ;
 }
 
-
-/*
- * Add our socketed to a fdset
- *
- */
-int artnet_net_set_fdset(node n, fd_set *fdset) {
- 	int maxfdp1 ;
- 	
- 	FD_SET(n->sd[0], fdset) ;
- 	if( n->sd[1] != -1) 
-		FD_SET(n->sd[1], fdset) ;
- 	
- 	maxfdp1 = max(n->sd[0] , n->sd[1]) + 1;
- 	return maxfdp1 ;
-}
 
 /*
  * Recv a packet from the network
@@ -533,11 +490,10 @@ int artnet_net_recv(node n, artnet_packet  p, int delay) {
 	socklen_t cliLen = sizeof(cliAddr) ;
 	fd_set rset ;
 	struct timeval tv ;
-	int active_sd = 0 ;
-	int maxfdp1 = max(n->sd[0] , n->sd[1]) + 1;
+	int maxfdp1 = n->sd + 1;
 
 	FD_ZERO(&rset) ;
- 	maxfdp1 = artnet_net_set_fdset(n,&rset) ;
+	FD_SET(n->sd , &rset) ;
 
 	tv.tv_usec = 0 ;
 	tv.tv_sec = delay ;
@@ -557,15 +513,6 @@ int artnet_net_recv(node n, artnet_packet  p, int delay) {
 			return ARTNET_EOK;			
 			break ;
 		default:
-			if(FD_ISSET(n->sd[0], &rset)  ) {
-				active_sd = n->sd[0] ;
-				p->to = n->state.ip_addr;
-			}
-			
-			if(n->sd[1] != -1 && FD_ISSET(n->sd[1], &rset) ) {
-				active_sd = n->sd[1] ;
-				p->to = n->state.bcast_addr;
-			}
 
 			break;
 	}
@@ -573,7 +520,7 @@ int artnet_net_recv(node n, artnet_packet  p, int delay) {
 	// need a check here for the amount of data read
 	// should prob allow an extra byte after data, and pass the size as sizeof(Data) +1
 	// then check the size read and if equal to size(data)+1 we have an error
-	if ( (len = recvfrom(active_sd, &(p->data), sizeof(p->data), 0, (SA*) &cliAddr, &cliLen) )< 0) {
+	if ( (len = recvfrom(n->sd, &(p->data), sizeof(p->data), 0, (SA*) &cliAddr, &cliLen) )< 0) {
 		artnet_error("%s : recvfrom error %s", __FUNCTION__, strerror(errno) );
 		return ARTNET_ENET ;
 	}
@@ -611,7 +558,7 @@ int artnet_net_send(node n, artnet_packet p) {
 	if(n->state.verbose) 
 		printf("sending to %s\n" , inet_ntoa(addr.sin_addr) ) ;
 
-	ret = sendto(n->sd[0], &p->data, p->length, 0, (SA*) &addr, sizeof(addr)) ;
+	ret = sendto(n->sd, &p->data, p->length, 0, (SA*) &addr, sizeof(addr)) ;
 	if ( ret == -1 ) {
 		artnet_error("Sendto failed: %s", strerror(errno) ) ;
 		n->state.report_code = ARTNET_RCUDPFAIL ;
@@ -654,25 +601,11 @@ int artnet_net_reprogram(node n) {
 
 int artnet_net_close(node n) {
 	
-	if( close(n->sd[0]) ) {
+	if( close(n->sd) ) {
 		artnet_error(strerror(errno)) ;
 		return ARTNET_ENET ;
 	}
 
-	if (n->sd[1] != -1 && close(n->sd[1])) {
-		artnet_error(strerror(errno)) ;
-		return ARTNET_ENET ;
-	}
 	return ARTNET_EOK;
 }
 
-// n2 is joining n1's group
-// n1 is the group master
-int artnet_net_join(node n1, node n2) {
-	if(n2->sd[1] != -1) 
-		close(n2->sd[1]) ;
-
-	n2->sd[1] = n1->sd[1] ;
-
-	return ARTNET_EOK ;
-}

@@ -420,7 +420,6 @@ typedef struct {
 	int send_apr_on_change;
 	int ar_count ;
 	int verbose ;
-	int compat ;
 	char short_name[ARTNET_SHORT_NAME_LENGTH] ;
 	char long_name[ARTNET_LONG_NAME_LENGTH] ;
 	char report[ARTNET_REPORT_LENGTH] ;
@@ -441,7 +440,7 @@ typedef struct {
  * The main node structure
  */
 typedef struct artnet_node_s{
-	int sd[2] ;									// the two sockets
+	int sd ;									// the two sockets
 	node_state_t state;							// the state struct
 	node_callbacks_t callbacks;					// the callbacks struct
 	struct ports_s {

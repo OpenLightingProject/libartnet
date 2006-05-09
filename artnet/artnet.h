@@ -201,7 +201,6 @@ typedef void *artnet_node_list ;
 // node control functions
 extern artnet_node artnet_init(const char *ip, int verbose) ;
 extern artnet_node artnet_new(const char *ip, int verbose) ;
-extern artnet_node artnet_new_c(const char *ip, int verbose, int compat) ;
 extern int artnet_start(artnet_node n) ;
 extern int artnet_read(artnet_node n, int timeout) ;
 extern int artnet_stop(artnet_node n) ;
@@ -264,7 +263,7 @@ extern int artnet_nl_get_length(artnet_node_list nl) ;
 // misc
 extern int artnet_dump_config(artnet_node n) ;
 extern int artnet_get_config(artnet_node n, artnet_node_config_t *config) ;
-extern int artnet_get_sd(artnet_node n, int socket) ;
+extern int artnet_get_sd(artnet_node n) ;
 extern int artnet_set_fdset(artnet_node vn, fd_set *fdset) ;
 
 char *artnet_strerror() ;
