@@ -373,8 +373,8 @@ int artnet_tx_build_art_poll_reply(node n) {
 	ar->ver = 0;
 	ar->subH = 0;
 	ar->sub = n->state.subnet ;
-	ar->oemH = 0 ;
-	ar->oem = OEM_CODE ;
+	ar->oemH = OEM_HI ;
+	ar->oem = OEM_LO ;
 	ar->ubea = 0 ;
 	// ar->status
 	
