@@ -50,7 +50,7 @@
 
 #define ARTNET_VERSION 14
 #define OEM_HI 0x04
-#define OEM_LI 0x31
+#define OEM_LO 0x31
 
 #define TTM_BEHAVIOUR_MASK 0x02
 #define TTM_REPLY_MASK 0x01
