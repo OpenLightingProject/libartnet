@@ -1,3 +1,7 @@
+12/6/2006 Simon Newton <<nomis52@westnet.com.au>
+
+	* added functions to set the oem and esta codes
+
 9/5/2006 Simon Newton <<nomis52@westnet.com.au>
 
 	* changed to using a single descriptor bound to *.6454

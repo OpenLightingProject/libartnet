@@ -70,6 +70,11 @@ artnet_node artnet_new(const char *ip, int verbose) {
 	n->node_list.last = NULL ;
 	n->node_list.length = 0;
 	n->state.verbose = verbose ;
+	n->state.oem_hi = OEM_HI ;
+	n->state.oem_lo = OEM_LO ;
+	n->state.esta_hi = ESTA_HI ;
+	n->state.esta_lo = ESTA_LO ;
+
 	n->peering.peer = NULL ;
 	n->peering.master = TRUE ;
 
@@ -215,6 +220,48 @@ int artnet_destroy(artnet_node vn) {
 	free(vn) ;
 	return ARTNET_EOK;
 }
+
+
+/*
+ * Set the OEM code
+ *
+ * this can only be done in the standby state
+ *
+ */
+int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo) {
+	node n = (node) vn ;		
+
+	check_nullnode(vn) ;
+	
+	if( n->state.mode != ARTNET_STANDBY)
+		return ARTNET_ESTATE ;
+
+	n->state.oem_hi = hi ;
+	n->state.oem_lo = lo ;
+	
+	return ARTNET_EOK ;
+}
+
+/*
+ * Set the ESTA code
+ *
+ * this can only be done in the standby state
+ *
+ */
+int artnet_setesta(artnet_node vn, char hi, char lo) {
+	node n = (node) vn ;		
+
+	check_nullnode(vn) ;
+	
+	if( n->state.mode != ARTNET_STANDBY)
+		return ARTNET_ESTATE ;
+
+	n->state.esta_hi = hi ;
+	n->state.esta_lo = lo ;
+	
+	return ARTNET_EOK ;
+}
+
 
 /**
  * Handle any received packets.

@@ -50,7 +50,9 @@
 
 #define ARTNET_VERSION 14
 #define OEM_HI 0x04
-#define OEM_LO 0x31
+#define OEM_LO 0x30
+#define ESTA_HI 'z' 
+#define ESTA_LO 'p'
 
 #define TTM_BEHAVIOUR_MASK 0x02
 #define TTM_REPLY_MASK 0x01
@@ -425,7 +427,10 @@ typedef struct {
 	char long_name[ARTNET_LONG_NAME_LENGTH] ;
 	char report[ARTNET_REPORT_LENGTH] ;
 	uint8_t subnet ;
-	
+	uint8_t oem_hi ;
+	uint8_t oem_lo ;
+	uint8_t esta_hi ;
+	uint8_t esta_lo ;
 
 	artnet_node_report_code report_code;
 } node_state_t ;

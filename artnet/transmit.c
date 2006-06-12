@@ -373,8 +373,8 @@ int artnet_tx_build_art_poll_reply(node n) {
 	ar->ver = 0;
 	ar->subH = 0;
 	ar->sub = n->state.subnet ;
-	ar->oemH = OEM_HI ;
-	ar->oem = OEM_LO ;
+	ar->oemH = n->state.oem_hi ;
+	ar->oem = n->state.oem_lo ;
 	ar->ubea = 0 ;
 	// ar->status
 	
@@ -385,8 +385,8 @@ int artnet_tx_build_art_poll_reply(node n) {
 	
 	// ESTA Manufacturer ID
 	// Assigned 18/4/2006
-	ar->etsaman[0] = 'z';
-	ar->etsaman[1] = 'p';
+	ar->etsaman[0] = n->state.esta_hi;
+	ar->etsaman[1] = n->state.esta_lo;
 		
 	memcpy(&ar->shortname, &n->state.short_name, sizeof(n->state.short_name) ) ;	
 	memcpy(&ar->longname, &n->state.long_name, sizeof(n->state.long_name) ) ;
