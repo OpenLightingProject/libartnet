@@ -202,7 +202,7 @@ typedef void *artnet_node_list ;
 extern artnet_node artnet_init(const char *ip, int verbose) ;
 extern artnet_node artnet_new(const char *ip, int verbose) ;
 extern int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo) ;
-int artnet_setesta(artnet_node vn, char hi, char lo) ;
+extern int artnet_setesta(artnet_node vn, char hi, char lo) ;
 extern int artnet_start(artnet_node n) ;
 extern int artnet_read(artnet_node n, int timeout) ;
 extern int artnet_stop(artnet_node n) ;

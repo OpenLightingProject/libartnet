@@ -86,7 +86,6 @@ artnet_node artnet_new(const char *ip, int verbose) {
 
 	// now setup the default parameters
 	n->state.send_apr_on_change = FALSE ;
-	n->state.reply_addr.s_addr = n->state.ip_addr.s_addr ;
 	n->state.ar_count = 0 ;
 	n->state.report_code = ARTNET_RCPOWEROK ;
 	n->state.reply_addr.s_addr = 0 ;

@@ -74,7 +74,8 @@ static iface_t *check_iface(struct ifaddrs *ifa) {
 	iface_t *ret = 0;
 	
 	if(!ifa) return 0;
-
+	if(!ifa || !ifa->ifa_addr) return 0;
+ 
 	// skip down, loopback and non inet interfaces
 	if(!(ifa->ifa_flags & IFF_UP)) return 0;
 	if(ifa->ifa_flags & IFF_LOOPBACK) return 0;
@@ -148,7 +149,7 @@ static int get_ifaces(iface_t **ift_head_r) {
 			
 		// Find corresponding iface_t -structure
 		for(ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
-			if(ifa_iter->ifa_addr->sa_family != AF_PACKET) 
+			if((! ifa_iter->ifa_addr) || ifa_iter->ifa_addr->sa_family  != AF_PACKET)
 				continue;
 		
 			if(strncmp(if_name, ifa_iter->ifa_name, 32)==0) {
