@@ -1,4 +1,9 @@
 12/6/2006 Simon Newton <<nomis52@westnet.com.au>
+	
+	* applied patches to network.c from Justin Cormack to skip interfaces
+		without addresses
+
+12/6/2006 Simon Newton <<nomis52@westnet.com.au>
 
 	* added functions to set the oem and esta codes
 

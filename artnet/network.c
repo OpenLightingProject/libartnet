@@ -73,7 +73,6 @@ static iface_t *check_iface(struct ifaddrs *ifa) {
 	struct sockaddr_in *sin;
 	iface_t *ret = 0;
 	
-	if(!ifa) return 0;
 	if(!ifa || !ifa->ifa_addr) return 0;
  
 	// skip down, loopback and non inet interfaces

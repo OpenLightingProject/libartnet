@@ -1,5 +1,9 @@
 12/6/2006 libartnet-1.0.3
 
+ Fixed the segfault caused by interfaces without addresses
+
+12/6/2006 libartnet-1.0.3
+
  Added esta and oem functions
 
 17/4/2006 libartnet-1.0.2
