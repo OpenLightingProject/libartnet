@@ -16,7 +16,6 @@
  * artnet.c
  * Part of libartnet
  * Copyright (C) 2004-2006 Simon Newton
-
  */
 #include "private.h"
 
