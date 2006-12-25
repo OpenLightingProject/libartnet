@@ -1,3 +1,7 @@
+24/12/2006 Simon Newton <<nomis52@westnet.com.au>
+
+	* bug fix for OS X
+
 12/6/2006 Simon Newton <<nomis52@westnet.com.au>
 	
 	* applied patches to network.c from Justin Cormack to skip interfaces
