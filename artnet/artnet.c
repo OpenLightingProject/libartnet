@@ -19,9 +19,9 @@
  */
 #include "private.h"
 
-char *artnet_errstr = NULL ;
+char *artnet_errstr = NULL;
 
-void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply) ;
+void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply);
 
 /** 
  * Creates a new ArtNet node.
@@ -34,10 +34,9 @@ void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply) ;
  */
 artnet_node artnet_init(const char *ip, int debug) {
 
-	// we'll printf here so someone notices
-	printf("Warning: Calling deprecated function artnet_init") ;
-	return artnet_new(ip, debug) ;
-
+	// we'll print here so someone notices
+	printf("Warning: Calling deprecated function artnet_init");
+	return artnet_new(ip, debug);
 }
 
 
@@ -51,68 +50,64 @@ artnet_node artnet_init(const char *ip, int debug) {
  * @return an artnet_node, or NULL on failure
  */
 artnet_node artnet_new(const char *ip, int verbose) {
-	node n ;
-	int i ;
+	node n;
+	int i;
 	
-	n = malloc(sizeof(artnet_node_t ) ) ;
+	n = malloc(sizeof(artnet_node_t ));
 
-	if(n == NULL) {
-		artnet_error("malloc failure") ;
-		goto e_exit ;
+	if (n == NULL) {
+		artnet_error("malloc failure");
+		goto e_exit;
 	}
 	
-	memset(n, 0x0, sizeof(artnet_node_t) ) ;
+	memset(n, 0x0, sizeof(artnet_node_t));
 
 	// init node listing
-	n->node_list.first = NULL ;
-	n->node_list.current = NULL ;
-	n->node_list.last = NULL ;
+	n->node_list.first = NULL;
+	n->node_list.current = NULL;
+	n->node_list.last = NULL;
 	n->node_list.length = 0;
-	n->state.verbose = verbose ;
-	n->state.oem_hi = OEM_HI ;
-	n->state.oem_lo = OEM_LO ;
-	n->state.esta_hi = ESTA_HI ;
-	n->state.esta_lo = ESTA_LO ;
+	n->state.verbose = verbose;
+	n->state.oem_hi = OEM_HI;
+	n->state.oem_lo = OEM_LO;
+	n->state.esta_hi = ESTA_HI;
+	n->state.esta_lo = ESTA_LO;
 
-	n->peering.peer = NULL ;
-	n->peering.master = TRUE ;
+	n->peering.peer = NULL;
+	n->peering.master = TRUE;
 
 	n->sd = -1;
 
-	if ( artnet_net_init(n, ip) ) {
-		goto e_free ;
+	if (artnet_net_init(n, ip)) {
+		goto e_free;
 	}
 
 	// now setup the default parameters
-	n->state.send_apr_on_change = FALSE ;
-	n->state.ar_count = 0 ;
-	n->state.report_code = ARTNET_RCPOWEROK ;
-	n->state.reply_addr.s_addr = 0 ;
-	n->state.mode = ARTNET_STANDBY ;
+	n->state.send_apr_on_change = FALSE;
+	n->state.ar_count = 0;
+	n->state.report_code = ARTNET_RCPOWEROK;
+	n->state.reply_addr.s_addr = 0;
+	n->state.mode = ARTNET_STANDBY;
 		
 	// set all ports to MERGE HTP mode and disable
-	for(i=0; i < ARTNET_MAX_PORTS;i++) {
-		n->ports.out[i].merge_mode = ARTNET_MERGE_HTP ;
-		n->ports.out[i].port_enabled = FALSE ;
-		n->ports.in[i].port_enabled = FALSE ;
+	for (i=0; i < ARTNET_MAX_PORTS; i++) {
+		n->ports.out[i].merge_mode = ARTNET_MERGE_HTP;
+		n->ports.out[i].port_enabled = FALSE;
+		n->ports.in[i].port_enabled = FALSE;
 
 		// reset tods
-		reset_tod(&n->ports.in[i].port_tod) ;
-		reset_tod(&n->ports.out[i].port_tod) ;
-		
+		reset_tod(&n->ports.in[i].port_tod);
+		reset_tod(&n->ports.out[i].port_tod);
 	}
 	
 	return n;
 	
 e_free:
-	free (n) ;
-	n = NULL ;
+	free(n);
+	n = NULL;
 e_exit :
 	return n;
-
 }
-
-
 		
 
 /**
@@ -124,45 +119,44 @@ e_exit :
  *
  */
 int artnet_start(artnet_node vn) {
-	node n = (node) vn ;
-	int ret ;
+	node n = (node) vn;
+	int ret;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
-	if( n->state.mode != ARTNET_STANDBY)
-		return ARTNET_ESTATE ;
+	if ( n->state.mode != ARTNET_STANDBY)
+		return ARTNET_ESTATE;
 
-	if( (ret =artnet_net_start(n)) )
+	if ( (ret = artnet_net_start(n)) )
 		goto e_exit;
 
-	n->state.mode = ARTNET_ON ;
+	n->state.mode = ARTNET_ON;
 
-	if(n->state.reply_addr.s_addr == 0) {
-		n->state.reply_addr = n->state.bcast_addr ;
+	if (n->state.reply_addr.s_addr == 0) {
+		n->state.reply_addr = n->state.bcast_addr;
 	}
 
 	// build the initial reply
-	if( (ret = artnet_tx_build_art_poll_reply(n) )) 
-		goto e_exit ;
+	if ( (ret = artnet_tx_build_art_poll_reply(n)) ) 
+		goto e_exit;
 	
-	if(n->state.node_type == ARTNET_SRV) {
+	if (n->state.node_type == ARTNET_SRV) {
 		// poll the network
 		
-		if( (ret = artnet_tx_poll(n,NULL, ARTNET_TTM_AUTO) ) )
-			goto e_exit ;
+		if ( (ret = artnet_tx_poll(n,NULL, ARTNET_TTM_AUTO)) )
+			goto e_exit;
 			
-		if( (ret = artnet_tx_tod_request(n)) )  
-			goto e_exit ;
-		
+		if ( (ret = artnet_tx_tod_request(n)) )
+			goto e_exit;
 	} else {
 
 		// send a reply on startup
-		if( (ret = artnet_tx_poll_reply(n, FALSE) )) 
-			goto e_exit ;
+		if ( (ret = artnet_tx_poll_reply(n, FALSE)) ) 
+			goto e_exit;
 	}
 
 e_exit:
-	return ret ;
+	return ret;
 }
 
 /**
@@ -173,18 +167,18 @@ e_exit:
  * @return 0 on success, -1 on failure
  */
 int artnet_stop(artnet_node vn) {
-	node n = (node) vn ;
-	int ret ;
+	node n = (node) vn;
+	int ret;
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 
-	if(n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+	if (n->state.mode != ARTNET_ON) 
+		return ARTNET_EACTION;
 
-	if( (ret = artnet_net_close(n) ))
-		return ret ;
+	if ( (ret = artnet_net_close(n)) )
+		return ret;
 	
-	n->state.mode = ARTNET_STANDBY ;
+	n->state.mode = ARTNET_STANDBY;
 
 	return ARTNET_EOK; 
 }
@@ -196,26 +190,26 @@ int artnet_stop(artnet_node vn) {
  *
  */
 int artnet_destroy(artnet_node vn) {
-	node n = (node) vn ;			
-	node_entry_private_t *ent, *tmp ;
-	int i ;
+	node n = (node) vn;			
+	node_entry_private_t *ent, *tmp;
+	int i;
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 
 	// free any memory associated with firmware transfers
-	for( ent = n->node_list.first; ent != NULL;  ent = tmp) {
-		if (ent->firmware.data != NULL ) 
-			free( ent->firmware.data) ;
-		tmp = ent->next ;
-		free(ent) ;
+	for ( ent = n->node_list.first; ent != NULL;  ent = tmp) {
+		if (ent->firmware.data != NULL)
+			free(ent->firmware.data);
+		tmp = ent->next;
+		free(ent);
 	}
 
-	for(i =0 ; i < ARTNET_MAX_PORTS ; i++) {
-		flush_tod(&n->ports.in[i].port_tod) ;
-		flush_tod(&n->ports.out[i].port_tod) ;
+	for (i =0; i < ARTNET_MAX_PORTS; i++) {
+		flush_tod(&n->ports.in[i].port_tod);
+		flush_tod(&n->ports.out[i].port_tod);
 	}
 
-	free(vn) ;
+	free(vn);
 	return ARTNET_EOK;
 }
 
@@ -227,18 +221,19 @@ int artnet_destroy(artnet_node vn) {
  *
  */
 int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo) {
-	node n = (node) vn ;		
+	node n = (node) vn;		
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
-	if( n->state.mode != ARTNET_STANDBY)
-		return ARTNET_ESTATE ;
+	if ( n->state.mode != ARTNET_STANDBY)
+		return ARTNET_ESTATE;
 
-	n->state.oem_hi = hi ;
-	n->state.oem_lo = lo ;
+	n->state.oem_hi = hi;
+	n->state.oem_lo = lo;
 	
-	return ARTNET_EOK ;
+	return ARTNET_EOK;
 }
+
 
 /*
  * Set the ESTA code
@@ -247,17 +242,17 @@ int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo) {
  *
  */
 int artnet_setesta(artnet_node vn, char hi, char lo) {
-	node n = (node) vn ;		
+	node n = (node) vn;		
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
-	if( n->state.mode != ARTNET_STANDBY)
-		return ARTNET_ESTATE ;
+	if ( n->state.mode != ARTNET_STANDBY)
+		return ARTNET_ESTATE;
 
-	n->state.esta_hi = hi ;
-	n->state.esta_lo = lo ;
+	n->state.esta_hi = hi;
+	n->state.esta_lo = lo;
 	
-	return ARTNET_EOK ;
+	return ARTNET_EOK;
 }
 
 
@@ -275,45 +270,44 @@ int artnet_setesta(artnet_node vn, char hi, char lo) {
  * @return 0 on success, -1 on failure
  */
 int artnet_read(artnet_node vn, int timeout) {
-	node n = (node) vn ;	
-	node tmp ;
-	artnet_packet_t p ;
-	int ret ;
+	node n = (node) vn;	
+	node tmp;
+	artnet_packet_t p;
+	int ret;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
 	while(1) {
-		memset( &p.data, 0x0, sizeof(p.data) ) ;
+		memset(&p.data, 0x0, sizeof(p.data));
 			
 		// check timeouts now, else this packet may update the timestamps
-		check_timeouts(n) ;
+		check_timeouts(n);
 		
-		if( (ret =artnet_net_recv(n, &p, timeout) ) < 0)
-			return ret ;
+		if ( (ret = artnet_net_recv(n, &p, timeout)) < 0)
+			return ret;
 		
 		// nothing to read
 		if (ret == RECV_NO_DATA) 
-			break ;
+			break;
 		
 		// skip this packet (filtered)
 		if (p.length == 0)
-			continue ;
+			continue;
 
-		for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer ) 
-			check_timeouts(tmp) ;
+		for (tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer)
+			check_timeouts(tmp);
 		
-
-		if( p.length > MIN_PACKET_SIZE && get_type(&p) ) {
-			handle(n, &p) ;
-			for( tmp = n->peering.peer ; tmp != NULL && tmp != n ; tmp = tmp->peering.peer )  {
-				handle(tmp, &p) ;
+		if ( p.length > MIN_PACKET_SIZE && get_type(&p)) {
+			handle(n, &p);
+			for ( tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer )  {
+				handle(tmp, &p);
 			}
 		} 
-	} ;
-	return ARTNET_EOK ;
+	}
+	return ARTNET_EOK;
 }
 
 
@@ -335,20 +329,20 @@ int artnet_read(artnet_node vn, int timeout) {
  */
 int artnet_join(artnet_node vn1, artnet_node vn2) {
 	
-	check_nullnode(vn1) ;
-	check_nullnode(vn2) ;
+	check_nullnode(vn1);
+	check_nullnode(vn2);
 	
-	node n1 = (node) vn1 ;
-	node n2 = (node) vn2 ;
+	node n1 = (node) vn1;
+	node n2 = (node) vn2;
 
-	if(n1->peering.peer == NULL && n2->peering.peer == NULL) {
-		n1->peering.peer = n2 ;
-		n2->peering.peer = n1 ;
-		n2->peering.master = FALSE ;
+	if (n1->peering.peer == NULL && n2->peering.peer == NULL) {
+		n1->peering.peer = n2;
+		n2->peering.peer = n1;
+		n2->peering.master = FALSE;
 
-		return ARTNET_EOK ;
+		return ARTNET_EOK;
 	} 
-	return ARTNET_ESTATE ;
+	return ARTNET_ESTATE;
 
 }
 
@@ -369,56 +363,56 @@ int artnet_join(artnet_node vn1, artnet_node vn2) {
  *
  */
 int artnet_set_handler(artnet_node vn, artnet_handler_name_t handler, int (*fh)(artnet_node n, void *pp, void * d), void *data) {
-	node n = (node) vn ;
-	callback_t *callback ;
+	node n = (node) vn;
+	callback_t *callback;
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 
-	switch( handler) {
+	switch(handler) {
 		case ARTNET_RECV_HANDLER:
-			callback = &n->callbacks.recv ;
+			callback = &n->callbacks.recv;
 			break;
 		case ARTNET_SEND_HANDLER:
-			callback = &n->callbacks.send ;
+			callback = &n->callbacks.send;
 			break;
 		case ARTNET_POLL_HANDLER:
-			callback = &n->callbacks.poll ;
-			break ;
+			callback = &n->callbacks.poll;
+			break;
 		case ARTNET_REPLY_HANDLER:
-			callback = &n->callbacks.reply ;
-			break ;
+			callback = &n->callbacks.reply;
+			break;
 		case ARTNET_ADDRESS_HANDLER:
-			callback = &n->callbacks.address ;
-			break ;
+			callback = &n->callbacks.address;
+			break;
 		case ARTNET_INPUT_HANDLER:
-			callback = &n->callbacks.input ;
-			break ;
+			callback = &n->callbacks.input;
+			break;
 		case ARTNET_DMX_HANDLER:
-			callback = &n->callbacks.dmx ;
-			break ;
+			callback = &n->callbacks.dmx;
+			break;
 		case ARTNET_TOD_REQUEST_HANDLER:
-			callback = &n->callbacks.todrequest ;
-			break ;
+			callback = &n->callbacks.todrequest;
+			break;
 		case ARTNET_TOD_DATA_HANDLER:
-			callback = &n->callbacks.toddata ;
-			break ;
+			callback = &n->callbacks.toddata;
+			break;
 		case ARTNET_TOD_CONTROL_HANDLER:
-			callback = &n->callbacks.todcontrol ;
-			break ;
+			callback = &n->callbacks.todcontrol;
+			break;
 		case ARTNET_RDM_HANDLER:
-			callback = &n->callbacks.rdm ;
-			break ;
+			callback = &n->callbacks.rdm;
+			break;
 
 		default:
-			artnet_error("%s : Invalid handler defined", __FUNCTION__ ) ;
+			artnet_error("%s : Invalid handler defined", __FUNCTION__);
 			return ARTNET_EARG;
 	}
-	callback->fh = fh ;
+	callback->fh = fh;
 	callback->data = data;
 	
 	return ARTNET_EOK;
-
 }
+
 
 /*
  * This is a special callback which is invoked when dmx data is received.
@@ -429,16 +423,16 @@ int artnet_set_handler(artnet_node vn, artnet_handler_name_t handler, int (*fh)(
  * @param data		Data to be passed to the handler when its called
  *
  */
-int artnet_set_dmx_handler(artnet_node vn, int (*fh)(artnet_node n,int port, void *d), void *data ) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+int artnet_set_dmx_handler(artnet_node vn, int (*fh)(artnet_node n,int port, void *d), void *data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 	
-	n->callbacks.dmx_c.fh = fh ;
+	n->callbacks.dmx_c.fh = fh;
 	n->callbacks.dmx_c.data = data;
 
 	return ARTNET_EOK;
 }
+
 
 /*
  * This is a special callback which is invoked when a firmware upload is received.
@@ -449,12 +443,11 @@ int artnet_set_dmx_handler(artnet_node vn, int (*fh)(artnet_node n,int port, voi
  * @param data		Data to be passed to the handler when its called
  *
  */
-int artnet_set_firmware_handler(artnet_node vn, int (*fh)(artnet_node n, int ubea, uint16_t *data, int length, void *d), void *data ) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+int artnet_set_firmware_handler(artnet_node vn, int (*fh)(artnet_node n, int ubea, uint16_t *data, int length, void *d), void *data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 	
-	n->callbacks.firmware_c.fh = fh ;
+	n->callbacks.firmware_c.fh = fh;
 	n->callbacks.firmware_c.data = data;
 
 	return ARTNET_EOK;
@@ -470,12 +463,11 @@ int artnet_set_firmware_handler(artnet_node vn, int (*fh)(artnet_node n, int ube
  * @param data		Data to be passed to the handler when its called
  *
  */
-int artnet_set_program_handler(artnet_node vn, int (*fh)(artnet_node n, void *d), void *data ) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+int artnet_set_program_handler(artnet_node vn, int (*fh)(artnet_node n, void *d), void *data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 	
-	n->callbacks.program_c.fh = fh ;
+	n->callbacks.program_c.fh = fh;
 	n->callbacks.program_c.data = data;
 
 	return ARTNET_EOK;
@@ -491,36 +483,34 @@ int artnet_set_program_handler(artnet_node vn, int (*fh)(artnet_node n, void *d)
  * @param data		Data to be passed to the handler when its called
  *
  */
-int artnet_set_rdm_handler(artnet_node vn, int (*fh)(artnet_node n, int address, uint8_t *rdm, int length, void *d), void *data ) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+int artnet_set_rdm_handler(artnet_node vn, int (*fh)(artnet_node n, int address, uint8_t *rdm, int length, void *d), void *data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 	
-	n->callbacks.rdm_c.fh = fh ;
+	n->callbacks.rdm_c.fh = fh;
 	n->callbacks.rdm_c.data = data;
 
 	return ARTNET_EOK;
 }
 
 
-int artnet_set_rdm_initiate_handler(artnet_node vn, int (*fh)(artnet_node n, int port, void *d), void *data ) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+int artnet_set_rdm_initiate_handler(artnet_node vn, int (*fh)(artnet_node n, int port, void *d), void *data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 	
-	n->callbacks.rdm_init_c.fh = fh ;
+	n->callbacks.rdm_init_c.fh = fh;
 	n->callbacks.rdm_init_c.data = data;
 
 	return ARTNET_EOK;
 
 }
 
-int artnet_set_rdm_tod_handler(artnet_node vn, int (*fh)(artnet_node n, int port, void *d), void *data ) {
-	node n = (node) vn ;
 
-	check_nullnode(vn) ;
+int artnet_set_rdm_tod_handler(artnet_node vn, int (*fh)(artnet_node n, int port, void *d), void *data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 	
-	n->callbacks.rdm_tod_c.fh = fh ;
+	n->callbacks.rdm_tod_c.fh = fh;
 	n->callbacks.rdm_tod_c.data = data;
 
 	return ARTNET_EOK;
@@ -528,10 +518,9 @@ int artnet_set_rdm_tod_handler(artnet_node vn, int (*fh)(artnet_node n, int port
 }
 
 
-
 // sends a poll to the specified ip, or if null, will broadcast
 // talk_to_me - modify remote nodes behaviour, see spec
-// FIX ME - this should clear the node list - but this will cause issues if the caller holds references
+// TODO - this should clear the node list - but this will cause issues if the caller holds references
 //   to certain nodes
 
 /**
@@ -541,21 +530,20 @@ int artnet_set_rdm_tod_handler(artnet_node vn, int (*fh)(artnet_node n, int port
  * @param talk_to_me the value for the talk to me
  */
 int artnet_send_poll(artnet_node vn, const char *ip,  artnet_ttm_value_t talk_to_me) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 	
-	if(n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
-		return artnet_tx_poll(n, ip, talk_to_me) ;
+	if (n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
+		return artnet_tx_poll(n, ip, talk_to_me);
 	}
 		
-	artnet_error("%s : Not sending poll, not a server or raw device", __FUNCTION__ ) ;
-	return ARTNET_ESTATE ;
-
+	artnet_error("%s : Not sending poll, not a server or raw device", __FUNCTION__);
+	return ARTNET_ESTATE;
 }
+
 
 /*
  * Sends an artpoll reply
@@ -564,15 +552,15 @@ int artnet_send_poll(artnet_node vn, const char *ip,  artnet_ttm_value_t talk_to
  *
  */
 int artnet_send_poll_reply(artnet_node vn) {
-	node n = (node) vn ;
-	
-	check_nullnode(vn) ;
+	node n = (node) vn;	
+	check_nullnode(vn);
 
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
-	return artnet_tx_poll_reply(n, FALSE) ;
+	return artnet_tx_poll_reply(n, FALSE);
 }
+
 
 /*
  * Sends some dmx data
@@ -581,58 +569,58 @@ int artnet_send_poll_reply(artnet_node vn) {
  * @param vn the artnet_node
  *
  */
-int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, uint8_t *data ) {
-	node n = (node) vn ;
-	artnet_packet_t p ;
-	int ret ;
+int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, uint8_t *data) {
+	node n = (node) vn;
+	artnet_packet_t p;
+	int ret;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
 	if (port_id < 0 || port_id >= ARTNET_MAX_PORTS) {
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id);
 		return ARTNET_EARG;
 	}
 	
-	if( length < 1 || length > ARTNET_MAX_DMX) {
-		artnet_error("%s : Length of dmx data out of bounds (%i < 1 || %i > ARTNET_MAX_DMX)", __FUNCTION__, length) ;
-		return ARTNET_EARG ;
+	if ( length < 1 || length > ARTNET_DMX_LENGTH) {
+		artnet_error("%s : Length of dmx data out of bounds (%i < 1 || %i > ARTNET_MAX_DMX)", __FUNCTION__, length);
+		return ARTNET_EARG;
 	}
 	
-	if(n->ports.in[port_id].port_status & PORT_STATUS_DISABLED_MASK) {
-		artnet_error("%s : attempt to send on a disabled port (id:%i)", __FUNCTION__, port_id) ;
-		return ARTNET_EARG ;
+	if (n->ports.in[port_id].port_status & PORT_STATUS_DISABLED_MASK) {
+		artnet_error("%s : attempt to send on a disabled port (id:%i)", __FUNCTION__, port_id);
+		return ARTNET_EARG;
 	}
 
 	// ok we're going to send now, make sure we turn the activity bit on
-	n->ports.in[port_id].port_status = n->ports.in[port_id].port_status | PORT_STATUS_ACT_MASK ;
+	n->ports.in[port_id].port_status = n->ports.in[port_id].port_status | PORT_STATUS_ACT_MASK;
 	
 	// set dst addr and length
-	p.to.s_addr = n->state.bcast_addr.s_addr ;
+	p.to.s_addr = n->state.bcast_addr.s_addr;
 
-	p.length = sizeof(artnet_dmx_t) - (ARTNET_MAX_DMX - length);
+	p.length = sizeof(artnet_dmx_t) - (ARTNET_DMX_LENGTH - length);
 	
 	// now build packet
-	memcpy( &p.data.admx.id, ARTNET_STRING, ARTNET_STRING_SIZE) ;
+	memcpy( &p.data.admx.id, ARTNET_STRING, ARTNET_STRING_SIZE);
 	p.data.admx.opCode =  htols(ARTNET_DMX);
 	p.data.admx.verH = 0;
 	p.data.admx.ver = ARTNET_VERSION;
-	p.data.admx.sequence = n->ports.in[port_id].seq ;
-	p.data.admx.physical = port_id ;
-	p.data.admx.universe = htols(n->ports.in[port_id].port_addr) ;
+	p.data.admx.sequence = n->ports.in[port_id].seq;
+	p.data.admx.physical = port_id;
+	p.data.admx.universe = htols(n->ports.in[port_id].port_addr);
 	
 	// set length
-	p.data.admx.lengthHi = short_get_high_byte(length) ; 
-	p.data.admx.length = short_get_low_byte(length) ;
-	memcpy(&p.data.admx.data, data, length) ; 
+	p.data.admx.lengthHi = short_get_high_byte(length); 
+	p.data.admx.length = short_get_low_byte(length);
+	memcpy(&p.data.admx.data, data, length); 
 
-	if( (ret= artnet_net_send(n, &p) ) )
-		return ret ;
+	if ( (ret= artnet_net_send(n, &p)) )
+		return ret;
 
-	n->ports.in[port_id].seq++ ;
-	return ARTNET_EOK ;
+	n->ports.in[port_id].seq++;
+	return ARTNET_EOK;
 }
 
 
@@ -642,86 +630,85 @@ int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, uint8_t *data )
  *
  */
 int artnet_raw_send_dmx(artnet_node vn, uint8_t addr, int16_t length, uint8_t *data) {
-	node n = (node) vn ;
-	artnet_packet_t p ;
+	node n = (node) vn;
+	artnet_packet_t p;
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
-	if(n->state.node_type != ARTNET_RAW) 
-		return ARTNET_ESTATE ;
+	if (n->state.node_type != ARTNET_RAW) 
+		return ARTNET_ESTATE;
 	
-	if( length < 1 || length > ARTNET_MAX_DMX) {
-		artnet_error("%s : Length of dmx data out of bounds (%i < 1 || %i > ARTNET_MAX_DMX)", __FUNCTION__, length) ;
-		return ARTNET_EARG ;
+	if ( length < 1 || length > ARTNET_DMX_LENGTH) {
+		artnet_error("%s : Length of dmx data out of bounds (%i < 1 || %i > ARTNET_MAX_DMX)", __FUNCTION__, length);
+		return ARTNET_EARG;
 	}
 
 	// set dst addr and length
-	p.to.s_addr = n->state.bcast_addr.s_addr ;
+	p.to.s_addr = n->state.bcast_addr.s_addr;
 
-	p.length = sizeof(artnet_dmx_t) - (ARTNET_MAX_DMX - length);
+	p.length = sizeof(artnet_dmx_t) - (ARTNET_DMX_LENGTH - length);
 	
 	// now build packet
-	memcpy( &p.data.admx.id, ARTNET_STRING, ARTNET_STRING_SIZE) ;
-	p.data.admx.opCode =  htols(ARTNET_DMX);
+	memcpy( &p.data.admx.id, ARTNET_STRING, ARTNET_STRING_SIZE);
+	p.data.admx.opCode = htols(ARTNET_DMX);
 	p.data.admx.verH = 0;
 	p.data.admx.ver = ARTNET_VERSION;
-	p.data.admx.sequence = 0 ;
-	p.data.admx.physical = 0 ;
-	p.data.admx.universe = addr ;
+	p.data.admx.sequence = 0;
+	p.data.admx.physical = 0;
+	p.data.admx.universe = addr;
 	
 	// set length
-	p.data.admx.lengthHi = short_get_high_byte(length) ; 
-	p.data.admx.length = short_get_low_byte(length) ;
-	memcpy(&p.data.admx.data, data, length) ; 
+	p.data.admx.lengthHi = short_get_high_byte(length); 
+	p.data.admx.length = short_get_low_byte(length);
+	memcpy(&p.data.admx.data, data, length); 
 	
 	return artnet_net_send(n, &p);
 }
 
 
 
-int artnet_send_address(artnet_node vn, artnet_node_entry e,const char *shortName, const char *longName, uint8_t inAddr[ARTNET_MAX_PORTS], uint8_t outAddr[ARTNET_MAX_PORTS], uint8_t subAddr, artnet_port_command_t cmd ) {
-	node n = (node) vn ;
-	artnet_packet_t p ;
-	node_entry_private_t *ent = find_private_entry(n,e) ;
+int artnet_send_address(artnet_node vn, artnet_node_entry e,const char *shortName, const char *longName, uint8_t inAddr[ARTNET_MAX_PORTS], uint8_t outAddr[ARTNET_MAX_PORTS], uint8_t subAddr, artnet_port_command_t cmd) {
+	node n = (node) vn;
+	artnet_packet_t p;
+	node_entry_private_t *ent = find_private_entry(n,e);
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
 	if ( e == NULL || ent == NULL) 
 		return ARTNET_EARG;
 
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 		
-	if(n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
-		p.to.s_addr = ent->ip.s_addr ;
+	if (n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
+		p.to.s_addr = ent->ip.s_addr;
 
-		p.length = sizeof(artnet_address_t) ;
-		p.type = ARTNET_ADDRESS ;
+		p.length = sizeof(artnet_address_t);
+		p.type = ARTNET_ADDRESS;
 		
 		// now build packet, copy the number of ports from the reply recieved from this node
-		memcpy( &p.data.addr.id, ARTNET_STRING, ARTNET_STRING_SIZE) ;
-		p.data.addr.opCode =  htols(ARTNET_ADDRESS);
+		memcpy( &p.data.addr.id, ARTNET_STRING, ARTNET_STRING_SIZE);
+		p.data.addr.opCode = htols(ARTNET_ADDRESS);
 		p.data.addr.verH = 0;
 		p.data.addr.ver = ARTNET_VERSION;
 		p.data.addr.filler1 = 0;
 		p.data.addr.filler2 = 0;
-		strncpy((char*) &p.data.addr.shortname, shortName, ARTNET_SHORT_NAME_LENGTH) ;
-		strncpy((char*) &p.data.addr.longname, longName, ARTNET_LONG_NAME_LENGTH) ;
+		strncpy((char*) &p.data.addr.shortname, shortName, ARTNET_SHORT_NAME_LENGTH);
+		strncpy((char*) &p.data.addr.longname, longName, ARTNET_LONG_NAME_LENGTH);
 
-		memcpy(&p.data.addr.swin, inAddr, ARTNET_MAX_PORTS) ;
-		memcpy(&p.data.addr.swout, outAddr, ARTNET_MAX_PORTS) ;
+		memcpy(&p.data.addr.swin, inAddr, ARTNET_MAX_PORTS);
+		memcpy(&p.data.addr.swout, outAddr, ARTNET_MAX_PORTS);
 
 		p.data.addr.subnet = subAddr;
 		p.data.addr.swvideo = 0x00;
-		p.data.addr.command = cmd ;
+		p.data.addr.command = cmd;
 
 		return artnet_net_send(n, &p);
-	} 
-
-	return ARTNET_ESTATE ;
+	}
+	return ARTNET_ESTATE;
 }
 
 
@@ -737,52 +724,53 @@ int artnet_send_address(artnet_node vn, artnet_node_entry e,const char *shortNam
  *
  */
 int artnet_send_input(artnet_node vn, artnet_node_entry e, uint8_t settings[ARTNET_MAX_PORTS]) {
-	node n = (node) vn ;
-	artnet_packet_t p ;
-	node_entry_private_t *ent = find_private_entry(n,e) ;
+	node n = (node) vn;
+	artnet_packet_t p;
+	node_entry_private_t *ent = find_private_entry(n,e);
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
-	if (e == NULL ) 
+	if (e == NULL) 
 		return ARTNET_EARG;
 
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
-	if(n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
+	if (n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
 		// set dst, type and length
-		p.to.s_addr = ent->ip.s_addr ;
+		p.to.s_addr = ent->ip.s_addr;
 
-		p.length = sizeof(artnet_input_t) ;
-		p.type = ARTNET_INPUT ;
+		p.length = sizeof(artnet_input_t);
+		p.type = ARTNET_INPUT;
 		
 		// now build packet, copy the number of ports from the reply recieved from this node
-		memcpy( &p.data.ainput.id, ARTNET_STRING, ARTNET_STRING_SIZE) ;
-		p.data.ainput.opCode =  htols(ARTNET_INPUT);
+		memcpy( &p.data.ainput.id, ARTNET_STRING, ARTNET_STRING_SIZE);
+		p.data.ainput.opCode = htols(ARTNET_INPUT);
 		p.data.ainput.verH = 0;
 		p.data.ainput.ver = ARTNET_VERSION;
 		p.data.ainput.filler1 = 0;
 		p.data.ainput.filler2 = 0;
-		p.data.ainput.numbportsH = short_get_high_byte(e->numbports) ;
-		p.data.ainput.numbports = short_get_low_byte(e->numbports) ;
-		memcpy(&p.data.ainput.input, &settings, ARTNET_MAX_PORTS) ;
+		p.data.ainput.numbportsH = short_get_high_byte(e->numbports);
+		p.data.ainput.numbports = short_get_low_byte(e->numbports);
+		memcpy(&p.data.ainput.input, &settings, ARTNET_MAX_PORTS);
 
-		return artnet_net_send(n, &p) ;
+		return artnet_net_send(n, &p);
 	} 
-
-	return ARTNET_ESTATE ;
+	return ARTNET_ESTATE;
 }
+
 
 // need address here
 /*int artnet_send_ipprog_reply(artnet_node vn) {
-	node n = (node) vn ;
-	artnet_packet_t ipr ;
+	node n = (node) vn;
+	artnet_packet_t ipr;
 
 
 
-	net_send(n, &reply) ; 
-	return 0 ;
+	net_send(n, &reply); 
+	return 0;
 }*/
+
 
 /**
  *
@@ -800,47 +788,47 @@ int artnet_send_input(artnet_node vn, artnet_node_entry e, uint8_t settings[ARTN
  * @param fh the callback that is invoked when the transfer is complete
  * @param user_data data to be passed to the callback
  */
-int artnet_send_firmware(artnet_node vn, artnet_node_entry e, int ubea, uint16_t *data, int length, int (*fh)(artnet_node n, artnet_firmware_status_code code, void *d), void *user_data ) {
-	node n = (node) vn ;
-	node_entry_private_t *ent = find_private_entry(n,e) ;
-	int blen ;
+int artnet_send_firmware(artnet_node vn, artnet_node_entry e, int ubea, uint16_t *data, int length, int (*fh)(artnet_node n, artnet_firmware_status_code code, void *d), void *user_data) {
+	node n = (node) vn;
+	node_entry_private_t *ent = find_private_entry(n,e);
+	int blen;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	if ( e == NULL || ent == NULL) 
 		return ARTNET_EARG;
 	
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
-	if(n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
+	if (n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
 		
 		// length in bytes
-		blen = length * sizeof(uint16_t) ;
+		blen = length * sizeof(uint16_t);
 				
 		// store the parameters for this transfer
-		ent->firmware.data = malloc( blen) ;
+		ent->firmware.data = malloc( blen);
 
-		if( ent->firmware.data == NULL) {
-			artnet_error_malloc() ;
-			return ARTNET_EMEM ;
+		if ( ent->firmware.data == NULL) {
+			artnet_error_malloc();
+			return ARTNET_EMEM;
 		}
 		
 		ent->firmware.bytes_current = 0;
-		ent->firmware.bytes_total = blen ;
-		ent->firmware.peer = ent->ip ;
-		ent->firmware.ubea = ubea ;
+		ent->firmware.bytes_total = blen;
+		ent->firmware.peer = ent->ip;
+		ent->firmware.ubea = ubea;
 		// entry->firmware.last_time set upon sending a packet
 		// id of the current block
-		ent->firmware.expected_block  = 0 ;
-		ent->firmware.callback = fh ;
-		ent->firmware.user_data = user_data ;
+		ent->firmware.expected_block = 0;
+		ent->firmware.callback = fh;
+		ent->firmware.user_data = user_data;
 
-		memcpy(ent->firmware.data, data, blen) ;
+		memcpy(ent->firmware.data, data, blen);
 
-		return artnet_tx_firmware_packet(n, &ent->firmware) ;
+		return artnet_tx_firmware_packet(n, &ent->firmware);
 	}
 	
-	return ARTNET_ESTATE ;
+	return ARTNET_ESTATE;
 }
 
 
@@ -857,20 +845,20 @@ int artnet_send_firmware(artnet_node vn, artnet_node_entry e, int ubea, uint16_t
  * @param code the status code to send
  */
 int artnet_send_firmware_reply(artnet_node vn, artnet_node_entry e, artnet_firmware_status_code code) {
-	node n = (node) vn ;
-	node_entry_private_t *ent = find_private_entry(n,e) ;
+	node n = (node) vn;
+	node_entry_private_t *ent = find_private_entry(n,e);
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
 	if (e == NULL || ent == NULL) 
 		return ARTNET_EARG;
 	
 	if (n->state.mode != ARTNET_ON) 
-		return ARTNET_EACTION ;
+		return ARTNET_EACTION;
 
-	return artnet_tx_firmware_reply(n, ent->ip.s_addr, code ) ;
-	
+	return artnet_tx_firmware_reply(n, ent->ip.s_addr, code);
 }
+
 
 /*
  * Sends a tod request
@@ -879,12 +867,12 @@ int artnet_send_firmware_reply(artnet_node vn, artnet_node_entry e, artnet_firmw
  *
  */
 int artnet_send_tod_request(artnet_node vn) {
-	node n = (node) vn ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
-	check_nullnode(vn) ;
-
-	return artnet_tx_tod_request(n) ;
+	return artnet_tx_tod_request(n);
 }
+
 
 /*
  * Sends a tod control datagram
@@ -895,10 +883,9 @@ int artnet_send_tod_request(artnet_node vn) {
  *
  */
 int artnet_send_tod_control(artnet_node vn, uint8_t address, artnet_tod_command_code action) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
-	return artnet_tx_tod_control(n, address, action) ;
+	node n = (node) vn;
+	check_nullnode(vn);
+	return artnet_tx_tod_control(n, address, action);
 }
 
 
@@ -910,19 +897,19 @@ int artnet_send_tod_control(artnet_node vn, uint8_t address, artnet_tod_command_
  * @param 
  */
 int artnet_send_tod_data(artnet_node vn, int port) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 	
 	// should update the check for enabled port here
 	if (port < 0 || port >= ARTNET_MAX_PORTS) {
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port);
 		return ARTNET_EARG;
 	}
 
-	return artnet_tx_tod_data(n, port) ;
+	return artnet_tx_tod_data(n, port);
 
 }
+
 
 /*
  * Send a rdm datagram
@@ -932,14 +919,14 @@ int artnet_send_tod_data(artnet_node vn, int port) {
  * @param length the length of the rdm data
  */
 int artnet_send_rdm(artnet_node vn, uint8_t address, uint8_t *data, int length) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 	
 	//we check that we are using this address
-	return artnet_tx_rdm(n, address, data, length) ;
-
+	return artnet_tx_rdm(n, address, data, length);
 }
+
+
 /*
  * add a rdm device to our tod.
  *
@@ -947,22 +934,21 @@ int artnet_send_rdm(artnet_node vn, uint8_t address, uint8_t *data, int length) 
  * @param the uid of the device
  */
 int artnet_add_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_WIDTH]) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 	
 	if (port < 0 || port >= ARTNET_MAX_PORTS) {
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port);
 		return ARTNET_EARG;
 	}
 
 	// add uid to tod for this port
-	add_tod_uid(&n->ports.out[port].port_tod, uid) ;
+	add_tod_uid(&n->ports.out[port].port_tod, uid);
 
 	// notify everyone  our tod changed
-	return artnet_tx_tod_data(n, port) ;
-
+	return artnet_tx_tod_data(n, port);
 }
+
 
 /*
  * add a list of rdm devices to our tod, use this for full discovery
@@ -972,26 +958,26 @@ int artnet_add_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_W
  * @param count number of uids
  */
 int artnet_add_rdm_devices(artnet_node vn, int port, uint8_t *uid, int count) {
-	node n = (node) vn ;
+	node n = (node) vn;
 	int i;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
 	if (port < 0 || port >= ARTNET_MAX_PORTS) {
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port);
 		return ARTNET_EARG;
 	}
 
 	if (count < 0) 
-		return ARTNET_EARG ;
+		return ARTNET_EARG;
 
-	for(i = 0 ; i < count; i++) {
+	for (i = 0; i < count; i++) {
 		// add uid to tod for this port
-		add_tod_uid(&n->ports.out[port].port_tod, uid) ;
-		uid += ARTNET_RDM_UID_WIDTH ;
+		add_tod_uid(&n->ports.out[port].port_tod, uid);
+		uid += ARTNET_RDM_UID_WIDTH;
 	}
 	// notify everyone  our tod changed
-	return artnet_tx_tod_data(n, port) ;
+	return artnet_tx_tod_data(n, port);
 
 }
 
@@ -1003,20 +989,19 @@ int artnet_add_rdm_devices(artnet_node vn, int port, uint8_t *uid, int count) {
  * @param the uid of the device
  */
 int artnet_remove_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_WIDTH]) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
 	if (port < 0 || port >= ARTNET_MAX_PORTS) {
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port);
 		return ARTNET_EARG;
 	}
 
 	// remove uid to tod for this port
-	remove_tod_uid(&n->ports.out[port].port_tod, uid) ;
+	remove_tod_uid(&n->ports.out[port].port_tod, uid);
 
 	// notify everyone our tod changed
-	return artnet_tx_tod_data(n, port) ;
+	return artnet_tx_tod_data(n, port);
 
 }
 
@@ -1032,32 +1017,30 @@ int artnet_remove_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UI
  */
 
 uint8_t *artnet_read_dmx(artnet_node vn, int port_id, int *length) {
-	node n = (node) vn ;
+	node n = (node) vn;
 
-	if(n == NULL)
+	if (n == NULL)
 		return NULL;
 
 	if (port_id < 0 || port_id >= ARTNET_MAX_PORTS) { 
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id);
 		return NULL;
 	}
 
-	*length = n->ports.out[port_id].length ;
-	
-	return &n->ports.out[port_id].data[0] ;
-
+	*length = n->ports.out[port_id].length;
+	return &n->ports.out[port_id].data[0];
 }
+
 
 //--------------------------------------
 // Functions to change the node state (setters)
 
 // type : server, node, mserver, raw
 int artnet_set_node_type(artnet_node vn, artnet_node_type type) {
-	node n = (node) vn ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
-	check_nullnode(vn) ;
-
-	n->state.node_type = type ;
+	n->state.node_type = type;
 	return ARTNET_EOK;
 }
 
@@ -1079,40 +1062,39 @@ int artnet_set_node_type(artnet_node vn, artnet_node_type type) {
  *
  */
 int artnet_set_subnet_addr(artnet_node vn, uint8_t subnet) {
-	node n = (node) vn ;
-	int i, ret ;
+	node n = (node) vn;
+	int i, ret;
 
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 
-	n->state.default_subnet = subnet ;
+	n->state.default_subnet = subnet;
  
 	// if not under network control, and the subnet is different from the current one
-	if( ! n->state.subnet_net_ctl  && subnet != n->state.subnet) {
-		n->state.subnet = subnet ;
+	if ( ! n->state.subnet_net_ctl && subnet != n->state.subnet) {
+		n->state.subnet = subnet;
 
 		// redo the addresses for each port
-		for(i =0 ; i < ARTNET_MAX_PORTS; i++ ) {
-			n->ports.in[i].port_addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.in[i].port_addr & LOW_NIBBLE) ;
+		for (i =0; i < ARTNET_MAX_PORTS; i++) {
+			n->ports.in[i].port_addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.in[i].port_addr & LOW_NIBBLE);
 			// reset dmx sequence number
-			n->ports.in[i].seq = 0 ;
+			n->ports.in[i].seq = 0;
 			
-			n->ports.out[i].port_addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.out[i].port_addr & LOW_NIBBLE) ;
+			n->ports.out[i].port_addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.out[i].port_addr & LOW_NIBBLE);
 		}
 
-		if( n->state.mode == ARTNET_ON) {
+		if (n->state.mode == ARTNET_ON) {
 			
-			if ( (ret = artnet_tx_build_art_poll_reply(n)))
-				return ret ;
+			if ((ret = artnet_tx_build_art_poll_reply(n)))
+				return ret;
 			
-			return artnet_tx_poll_reply(n,FALSE) ;
+			return artnet_tx_poll_reply(n,FALSE);
 		}
 	} else if (n->state.subnet_net_ctl ) {
 		//  trying to change subnet addr while under network control
-		n->state.report_code = ARTNET_RCUSERFAIL ;
-
+		n->state.report_code = ARTNET_RCUSERFAIL;
 	}
 
-	return ARTNET_EOK ;
+	return ARTNET_EOK;
 }
 
 
@@ -1124,15 +1106,16 @@ int artnet_set_subnet_addr(artnet_node vn, uint8_t subnet) {
  * @param name the short name of the node.
  */
 int artnet_set_short_name(artnet_node vn, const char *name) {
-	node n = (node) vn ;
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
-	strncpy((char *) &n->state.short_name, name, 18) ;
-	n->state.short_name[17] = 0x00 ;
+	strncpy((char *) &n->state.short_name, name, 18);
+	n->state.short_name[17] = 0x00;
 	
-	return artnet_tx_build_art_poll_reply(n) ;
+	return artnet_tx_build_art_poll_reply(n);
 	
 }
+
 
 /**
  * Sets the long name of the node. 
@@ -1142,13 +1125,14 @@ int artnet_set_short_name(artnet_node vn, const char *name) {
  * @param name the node's long name
  */
 int artnet_set_long_name(artnet_node vn, const char *name) {
-	node n = (node) vn ;
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
-	strncpy((char *) &n->state.long_name, name, 64) ;
-	n->state.long_name[63] = 0x00 ;
-	return artnet_tx_build_art_poll_reply(n) ;
+	strncpy((char *) &n->state.long_name, name, 64);
+	n->state.long_name[63] = 0x00;
+	return artnet_tx_build_art_poll_reply(n);
 }
+
 
 /*
  * Sets the direction and type of port
@@ -1159,16 +1143,16 @@ int artnet_set_long_name(artnet_node vn, const char *name) {
  * @param direction
  * @param data
  */
-int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t settings, artnet_port_data_code data ) {
-	node n = (node) vn ;
-	check_nullnode(vn) ;
+int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t settings, artnet_port_data_code data) {
+	node n = (node) vn;
+	check_nullnode(vn);
 
 	if (port_id < 0 || port_id >= ARTNET_MAX_PORTS) { 
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id);
 		return ARTNET_EARG;
 	}
 
-	n->ports.types[port_id] = settings | data ;
+	n->ports.types[port_id] = settings | data;
 
 	return ARTNET_EOK;
 }
@@ -1200,60 +1184,60 @@ int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t set
  * @param addr the new port address
  */
 int artnet_set_port_addr(artnet_node vn, int id, artnet_port_dir_t dir, uint8_t addr) {
-	node n = (node) vn ;
-	int ret ;
-	int changed = 0 ;
+	node n = (node) vn;
+	int ret;
+	int changed = 0;
 	
-	g_port_t *port ;
+	g_port_t *port;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 	
 	if (id < 0 || id >= ARTNET_MAX_PORTS) { 
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, id) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, id);
 		return ARTNET_EARG;
 	}
 
-	if(addr > 16) {
-		artnet_error("%s : Attempt to set port %i to invalid address %#hhx\n", __FUNCTION__, id, addr) ;
-		return ARTNET_EARG ;
+	if (addr > 16) {
+		artnet_error("%s : Attempt to set port %i to invalid address %#hhx\n", __FUNCTION__, id, addr);
+		return ARTNET_EARG;
 	}
 
-	if(dir == ARTNET_INPUT_PORT) {
-		port = &n->ports.in[id].port ;
-		changed = n->ports.in[id].port_enabled?0:1 ;
-		n->ports.in[id].port_enabled = TRUE ;		
-	} else if( dir == ARTNET_OUTPUT_PORT) {
-		port = &n->ports.out[id].port ;
-		changed = n->ports.out[id].port_enabled?0:1 ;		
-		n->ports.out[id].port_enabled = TRUE ;
+	if (dir == ARTNET_INPUT_PORT) {
+		port = &n->ports.in[id].port;
+		changed = n->ports.in[id].port_enabled?0:1;
+		n->ports.in[id].port_enabled = TRUE;		
+	} else if ( dir == ARTNET_OUTPUT_PORT) {
+		port = &n->ports.out[id].port;
+		changed = n->ports.out[id].port_enabled?0:1;		
+		n->ports.out[id].port_enabled = TRUE;
 	} else {
-		artnet_error("%s : Invalid port direction\n", __FUNCTION__) ;
+		artnet_error("%s : Invalid port direction\n", __FUNCTION__);
 		return ARTNET_EARG;
 	}
 
-	port->default_addr = addr ;
+	port->default_addr = addr;
 	
 	// if not under network control and address is changing
-	if(! port->net_ctl && (changed || (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE)) ) {
-		port->addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE) ;
+	if (! port->net_ctl && (changed || (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE)) ) {
+		port->addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
 
 		// reset seq if input port
-		if(dir == ARTNET_INPUT_PORT) 
-			n->ports.in[id].seq = 0 ;
+		if (dir == ARTNET_INPUT_PORT) 
+			n->ports.in[id].seq = 0;
 
-		if( n->state.mode == ARTNET_ON) {
-			if ((ret = artnet_tx_build_art_poll_reply(n) )) 
-				return ret ;
+		if ( n->state.mode == ARTNET_ON) {
+			if ((ret = artnet_tx_build_art_poll_reply(n))) 
+				return ret;
 			
-			return artnet_tx_poll_reply(n,FALSE) ;
+			return artnet_tx_poll_reply(n,FALSE);
 		}
-	} else if (port->net_ctl ) {
+	} else if (port->net_ctl) {
 		//  trying to change port addr while under network control
-		n->state.report_code = ARTNET_RCUSERFAIL ;
+		n->state.report_code = ARTNET_RCUSERFAIL;
 	}
-
 	return ARTNET_EOK;
 }
+
 
 /*
  * Returns the universe address of this port
@@ -1266,34 +1250,34 @@ int artnet_set_port_addr(artnet_node vn, int id, artnet_port_dir_t dir, uint8_t 
  *
  */
 int artnet_get_universe_addr(artnet_node vn, int id, artnet_port_dir_t dir) {
-	node n = (node) vn ;
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
 	if (id < 0 || id >= ARTNET_MAX_PORTS) { 
-		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, id) ;
+		artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, id);
 		return ARTNET_EARG;
 	}
 
-	if(dir == ARTNET_INPUT_PORT) 
-		return n->ports.in[id].port.addr ;
-	else if( dir == ARTNET_OUTPUT_PORT)
-		return n->ports.out[id].port.addr ;
+	if (dir == ARTNET_INPUT_PORT) 
+		return n->ports.in[id].port.addr;
+	else if (dir == ARTNET_OUTPUT_PORT)
+		return n->ports.out[id].port.addr;
 	else {
-		artnet_error("%s : Invalid port direction\n", __FUNCTION__) ;
+		artnet_error("%s : Invalid port direction\n", __FUNCTION__);
 		return ARTNET_EARG;
 	}
 }
 
 int artnet_get_config(artnet_node vn, artnet_node_config_t *config) {
-	int i ;
-	node n = (node) vn ;
-	check_nullnode(vn) ;
+	int i;
+	node n = (node) vn;
+	check_nullnode(vn);
 
-	strncpy(config->short_name, n->state.short_name, ARTNET_SHORT_NAME_LENGTH) ;
-	strncpy(config->long_name, n->state.long_name, ARTNET_LONG_NAME_LENGTH) ;
-	config->subnet = n->state.subnet ;
+	strncpy(config->short_name, n->state.short_name, ARTNET_SHORT_NAME_LENGTH);
+	strncpy(config->long_name, n->state.long_name, ARTNET_LONG_NAME_LENGTH);
+	config->subnet = n->state.subnet;
 
-	for(i = 0; i < ARTNET_MAX_PORTS ; i++) {
+	for (i = 0; i < ARTNET_MAX_PORTS; i++) {
 		config->in_ports[i] = n->ports.in[i].port.addr & LOW_NIBBLE;
 		config->out_ports[i] = n->ports.out[i].port.addr & LOW_NIBBLE;
 	}
@@ -1308,21 +1292,22 @@ int artnet_get_config(artnet_node vn, artnet_node_config_t *config) {
  * @param vn the artnet_node
  */
 int artnet_dump_config(artnet_node vn) {
-	node n = (node) vn ;
+	node n = (node) vn;
 	
-	check_nullnode(vn) ;
+	check_nullnode(vn);
 
-	printf("#### NODE CONFIG ####\n") ;
-	printf("Node Type: %i\n", n->state.node_type) ;
-	printf("Short Name: %s\n", n->state.short_name) ;
-	printf("Long Name: %s\n", n->state.long_name) ;
-	printf("Subnet: %#hx\n", n->state.subnet) ;
-	printf("Default Subnet: %#hx\n", n->state.default_subnet) ;
-	printf("Net Ctl: %i\n", n->state.subnet_net_ctl) ;
-	printf("#####################\n") ;
+	printf("#### NODE CONFIG ####\n");
+	printf("Node Type: %i\n", n->state.node_type);
+	printf("Short Name: %s\n", n->state.short_name);
+	printf("Long Name: %s\n", n->state.long_name);
+	printf("Subnet: %#hx\n", n->state.subnet);
+	printf("Default Subnet: %#hx\n", n->state.default_subnet);
+	printf("Net Ctl: %i\n", n->state.subnet_net_ctl);
+	printf("#####################\n");
 
 	return ARTNET_EOK;
 }
+
 
 /**
  * Returns the socket descriptor associated with this artnet_node.
@@ -1336,15 +1321,15 @@ int artnet_dump_config(artnet_node vn) {
  * @return the socket descriptor
  */
 int artnet_get_sd(artnet_node vn) {
-	node n = (node) vn ;
+	node n = (node) vn;
+	check_nullnode(vn);
 
-	check_nullnode(vn) ;
+	if ( n->state.mode != ARTNET_ON)
+		return ARTNET_EACTION;
 
-	if( n->state.mode != ARTNET_ON)
-		return ARTNET_EACTION ;
-
-	return n->sd ;
+	return n->sd;
 }
+
 
 /**
  * Sets the file descriptors in the fdset that we are interested in. 
@@ -1354,17 +1339,16 @@ int artnet_get_sd(artnet_node vn) {
  * @return the maxfd+1
  */
 int artnet_set_fdset(artnet_node vn, fd_set *fdset) {
-	node n = (node) vn ;
-
-	check_nullnode(vn) ;
+	node n = (node) vn;
+	check_nullnode(vn);
  	
 	if (fdset == NULL) 
 		return ARTNET_EARG;
 
-	if( n->state.mode != ARTNET_ON)
-		return ARTNET_EACTION ;
+	if ( n->state.mode != ARTNET_ON)
+		return ARTNET_EACTION;
 
-	return artnet_net_set_fdset(n,fdset) ;
+	return artnet_net_set_fdset(n, fdset);
 }
 
 
@@ -1379,14 +1363,14 @@ int artnet_set_fdset(artnet_node vn, fd_set *fdset) {
  */
 
 artnet_node_list artnet_get_nl(artnet_node vn) {
-	node n = (node) vn ;
+	node n = (node) vn;
 
-	if(vn == NULL)
-		return NULL ;
+	if (vn == NULL)
+		return NULL;
 	
-	return &n->node_list ;
-
+	return &n->node_list;
 }
+
 
 /**
  * Repositions the pointer to the first entry in the artnet_node_list
@@ -1396,17 +1380,16 @@ artnet_node_list artnet_get_nl(artnet_node vn) {
  * @return the first artnet_node_entry in the list, or NULL if the list is empty
  */
 artnet_node_entry artnet_nl_first(artnet_node_list vnl) {
-	node_list_t *nl = (node_list_t*) vnl ;
+	node_list_t *nl = (node_list_t*) vnl;
 
-	if(nl == NULL)
-		return NULL ;
+	if (nl == NULL)
+		return NULL;
 
-	nl->current = nl->first ;
+	nl->current = nl->first;
 
-	return &nl->current->pub ;
-	
-	
+	return &nl->current->pub;	
 }
+
 
 /**
  * Moves the pointer to the next element in the artnet_node_list
@@ -1416,14 +1399,15 @@ artnet_node_entry artnet_nl_first(artnet_node_list vnl) {
  * @return the next artnet_node_entry, or NULL if the end of the list is reached
  */
 artnet_node_entry artnet_nl_next(artnet_node_list vnl) {
-	node_list_t *nl = (node_list_t*) vnl ;
+	node_list_t *nl = (node_list_t*) vnl;
 
-	if(nl == NULL)
-		return NULL ;
+	if (nl == NULL)
+		return NULL;
 
-	nl->current = nl->current->next ;
-	return &nl->current->pub ;
+	nl->current = nl->current->next;
+	return &nl->current->pub;
 }
+
 
 /**
  * Returns the length of the artnet_node_list
@@ -1433,19 +1417,21 @@ artnet_node_entry artnet_nl_next(artnet_node_list vnl) {
  * @return the length of the list
  */
 int artnet_nl_get_length(artnet_node_list vnl) {
-	node_list_t *nl = (node_list_t*) vnl ;
+	node_list_t *nl = (node_list_t*) vnl;
 
-	if(nl == NULL)
-		return 0 ;
+	if (nl == NULL)
+		return 0;
 
-	return nl->length ;
+	return nl->length;
 
 }
 
 
+/*
+ * Return a pointer to the staticly allocated error string
+ */
 char *artnet_strerror() {
-	return artnet_errstr ;
-
+	return artnet_errstr;
 }
 
 
@@ -1454,54 +1440,52 @@ char *artnet_strerror() {
 //-----------------------------------------------------------------------------
 
 int artnet_nl_update(node_list_t *nl, artnet_packet reply) {
-	node_entry_private_t *entry ;
+	node_entry_private_t *entry;
 	
-	entry = find_entry_from_ip(nl, reply->from) ;
+	entry = find_entry_from_ip(nl, reply->from);
 
-	if(entry == NULL) {
+	if (entry == NULL) {
 		// add to list	
-		entry = (node_entry_private_t*) malloc(sizeof(node_entry_private_t)) ;
+		entry = (node_entry_private_t*) malloc(sizeof(node_entry_private_t));
 
-		if(entry == NULL) {
-			artnet_error_malloc() ;
-			return ARTNET_EMEM ;
+		if (entry == NULL) {
+			artnet_error_malloc();
+			return ARTNET_EMEM;
 		}
 	
-		memset( entry , 0x00, sizeof(node_entry_private_t) ) ;
+		memset( entry , 0x00, sizeof(node_entry_private_t));
 
-		copy_apr_to_node_entry(&entry->pub, &reply->data.ar) ;
-		entry->ip = reply->from ;
-		entry->next = NULL ;
+		copy_apr_to_node_entry(&entry->pub, &reply->data.ar);
+		entry->ip = reply->from;
+		entry->next = NULL;
 		
-		if(nl->first == NULL) {
-			nl->first = entry ;
-			nl->last = entry ;
+		if (nl->first == NULL) {
+			nl->first = entry;
+			nl->last = entry;
 		} else {
-			nl->last->next = entry ;
+			nl->last->next = entry;
 			nl->last = entry;
 		}
 		nl->length++;
 	} else {
 		// update entry
-		copy_apr_to_node_entry(&entry->pub, &reply->data.ar) ;
+		copy_apr_to_node_entry(&entry->pub, &reply->data.ar);
 	}
-	return ARTNET_EOK ;
+	return ARTNET_EOK;
 }
-
-
 
 
 /*
  * check if this packet is in list
  */
-node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip ) {
-	node_entry_private_t *tmp ;
+node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip) {
+	node_entry_private_t *tmp;
 
-	for( tmp = nl->first; tmp != NULL; tmp = tmp->next ) {
-		if( ip.s_addr == tmp->ip.s_addr )
-			break ;
+	for ( tmp = nl->first; tmp != NULL; tmp = tmp->next) {
+		if (ip.s_addr == tmp->ip.s_addr)
+			break;
 	}
-	return tmp ;
+	return tmp;
 }
 
 
@@ -1513,54 +1497,54 @@ void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply) {
 	e->ver = bytes_to_short(reply->verH, reply->ver);
 	e->sub = bytes_to_short(reply->subH, reply->sub);
 	e->oem = bytes_to_short(reply->oemH, reply->oem);
-	e->ubea = reply->ubea ;
-	memcpy(&e->etsaman, &reply->etsaman, 2) ;
+	e->ubea = reply->ubea;
+	memcpy(&e->etsaman, &reply->etsaman, 2);
 	memcpy(&e->shortname, &reply->shortname,  sizeof(e->shortname));
 	memcpy(&e->longname, &reply->longname, sizeof(e->longname));
 	memcpy(&e->nodereport, &reply->nodereport, sizeof(e->nodereport));
 	e->numbports = bytes_to_short(reply->numbportsH, reply->numbports);
-	memcpy(&e->porttypes, &reply->porttypes, ARTNET_MAX_PORTS) ;
-	memcpy(&e->goodinput, &reply->goodinput, ARTNET_MAX_PORTS) ;
-	memcpy(&e->goodinput, &reply->goodinput, ARTNET_MAX_PORTS) ;
-	memcpy(&e->goodoutput, &reply->goodoutput, ARTNET_MAX_PORTS) ;
-	memcpy(&e->swin, &reply->swin, ARTNET_MAX_PORTS) ;
-	memcpy(&e->swout, &reply->swout, ARTNET_MAX_PORTS) ;
-	e->swvideo = reply->swvideo ;
-	e->swmacro = reply->swmacro ;
-	e->swremote = reply->swremote ;
-	e->style = reply->style ;
-	memcpy(&e->mac, &reply->mac, 8);
+	memcpy(&e->porttypes, &reply->porttypes, ARTNET_MAX_PORTS);
+	memcpy(&e->goodinput, &reply->goodinput, ARTNET_MAX_PORTS);
+	memcpy(&e->goodinput, &reply->goodinput, ARTNET_MAX_PORTS);
+	memcpy(&e->goodoutput, &reply->goodoutput, ARTNET_MAX_PORTS);
+	memcpy(&e->swin, &reply->swin, ARTNET_MAX_PORTS);
+	memcpy(&e->swout, &reply->swout, ARTNET_MAX_PORTS);
+	e->swvideo = reply->swvideo;
+	e->swmacro = reply->swmacro;
+	e->swremote = reply->swremote;
+	e->style = reply->style;
+	memcpy(&e->mac, &reply->mac, ARTNET_MAC_SIZE);
 }
 
-node_entry_private_t *find_private_entry( node n, artnet_node_entry e) {
+
+node_entry_private_t *find_private_entry(node n, artnet_node_entry e) {
 	
 	if (e == NULL)
-		return NULL ;
+		return NULL;
 
-	node_entry_private_t *tmp = n->node_list.first ;
+	node_entry_private_t *tmp = n->node_list.first;
 
 	// check if this packet is in list
 	while(tmp != NULL) {
-		if( !memcmp(&e->ip, &tmp->pub.ip, 4) ) {
-			return tmp ;
+		if ( !memcmp(&e->ip, &tmp->pub.ip, 4) ) {
+			return tmp;
 		}
-		tmp =  tmp->next ;
+		tmp =  tmp->next;
 	}
 	return tmp;
 }
 
-void check_timeouts(node n) {
-	time_t 	now = time(NULL) ;
 
-	if( n->firmware.peer.s_addr != 0 
+void check_timeouts(node n) {
+	time_t now = time(NULL);
+
+	if ( n->firmware.peer.s_addr != 0 
 			&& (now - n->firmware.last_time >= FIRMWARE_TIMEOUT_SECONDS ) ) {
 
-			printf("firmware timeout\n") ;
-			reset_firmware_upload(n) ;
+			printf("firmware timeout\n");
+			reset_firmware_upload(n);
 
-			n->state.report_code = ARTNET_RCFIRMWAREFAIL ;
+			n->state.report_code = ARTNET_RCFIRMWAREFAIL;
 			// spec says to set ArtPollReply->Status here, but don't know to what value		
 	}
 }
-
-

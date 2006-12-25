@@ -28,19 +28,15 @@
 
 #include <artnet/common.h>
 
-#define ARTNET_MAX_RDM_ADCOUNT	32
+enum { ARTNET_MAX_RDM_ADCOUNT = 32 };
 
-#define ARTNET_MAX_UID_COUNT	200
-
-#define ARTNET_MAX_DMX	512
+enum { ARTNET_MAX_UID_COUNT = 200 };
 
 // according to the rdm spec, this should be 278 bytes
 // we'll set to 512 here, the firmware datagram is still bigger
-#define ARTNET_MAX_RDM_DATA	512
+enum { ARTNET_MAX_RDM_DATA = 512 };
 
-#define ARTNET_FIRMWARE_SIZE 512
-
-#define ARTNET_MAC_SIZE 6
+enum { ARTNET_FIRMWARE_SIZE = 512 };
 
 
 enum artnet_packet_type_e {
@@ -70,7 +66,6 @@ enum artnet_packet_type_e {
 typedef enum artnet_packet_type_e artnet_packet_type_t;
 
 
-
 struct artnet_poll_s {
 	uint8_t		id[8];
 	uint16_t 	opCode;
@@ -80,7 +75,7 @@ struct artnet_poll_s {
 	uint8_t		pad;
 } __attribute__( ( packed ) );
 
-typedef struct artnet_poll_s artnet_poll_t ;
+typedef struct artnet_poll_s artnet_poll_t;
 
 struct artnet_reply_s {
 	uint8_t		id[8];
@@ -117,7 +112,7 @@ struct artnet_reply_s {
 	uint8_t		filler[32];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_reply_s artnet_reply_t ;
+typedef struct artnet_reply_s artnet_reply_t;
 
 struct artnet_ipprog_s {
 	uint8_t 	id[8];
@@ -149,10 +144,10 @@ struct artnet_ipprog_s {
 
 } __attribute__( ( packed ) );
 
-typedef struct artnet_ipprog_s artnet_ipprog_t ;
+typedef struct artnet_ipprog_s artnet_ipprog_t;
 
 struct artnet_ipprog_reply_s {
-	uint8_t 	ID[8];
+	uint8_t 	id[8];
 	uint16_t	OpCode;
 	uint8_t		ProVerH;
 	uint8_t		ProVer;
@@ -180,7 +175,7 @@ struct artnet_ipprog_reply_s {
 	uint8_t		Spare8;
 } __attribute__( ( packed ) );
 
-typedef struct artnet_ipprog_reply_s artnet_ipprog_reply_t ;
+typedef struct artnet_ipprog_reply_s artnet_ipprog_reply_t;
 
 
 struct artnet_address_s {
@@ -199,10 +194,7 @@ struct artnet_address_s {
 	uint8_t		command;
 } __attribute__( ( packed ) );
 
-typedef struct artnet_address_s artnet_address_t ;
-
-	
-
+typedef struct artnet_address_s artnet_address_t;
 
 
 struct artnet_dmx_s {
@@ -210,15 +202,15 @@ struct artnet_dmx_s {
 	uint16_t	opCode;
 	uint8_t		verH;
 	uint8_t		ver;
-	uint8_t		sequence ;
-	uint8_t		physical ;
+	uint8_t		sequence;
+	uint8_t		physical;
 	uint16_t	universe;
-	uint8_t		lengthHi ;
+	uint8_t		lengthHi;
 	uint8_t		length;
-	uint8_t		data[ARTNET_MAX_DMX] ;
+	uint8_t		data[ARTNET_DMX_LENGTH];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_dmx_s artnet_dmx_t ;
+typedef struct artnet_dmx_s artnet_dmx_t;
 
 
 struct artnet_input_s {
@@ -233,7 +225,7 @@ struct artnet_input_s {
 	uint8_t		input[ARTNET_MAX_PORTS];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_input_s artnet_input_t ;
+typedef struct artnet_input_s artnet_input_t;
 
 
 struct artnet_todrequest_s {
@@ -253,10 +245,10 @@ struct artnet_todrequest_s {
 	uint8_t		spare8;
 	uint8_t		command;
 	uint8_t		adCount;
-	uint8_t		address[ARTNET_MAX_RDM_ADCOUNT] ;
+	uint8_t		address[ARTNET_MAX_RDM_ADCOUNT];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_todrequest_s artnet_todrequest_t ;
+typedef struct artnet_todrequest_s artnet_todrequest_t;
 
 
 
@@ -277,14 +269,14 @@ struct artnet_toddata_s {
 	uint8_t		spare8;
 	uint8_t		cmdRes;
 	uint8_t		address;
-	uint8_t		uidTotalHi ;
+	uint8_t		uidTotalHi;
 	uint8_t		uidTotal;
 	uint8_t		blockCount;
-	uint8_t		uidCount ;
-	uint8_t		tod[ARTNET_MAX_UID_COUNT][ARTNET_RDM_UID_WIDTH] ;
+	uint8_t		uidCount;
+	uint8_t		tod[ARTNET_MAX_UID_COUNT][ARTNET_RDM_UID_WIDTH];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_toddata_s artnet_toddata_t ;
+typedef struct artnet_toddata_s artnet_toddata_t;
 
 struct artnet_firmware_s {
 	uint8_t 	id[8];
@@ -300,7 +292,7 @@ struct artnet_firmware_s {
 	uint16_t	data[ARTNET_FIRMWARE_SIZE ];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_firmware_s artnet_firmware_t ;
+typedef struct artnet_firmware_s artnet_firmware_t;
 
 struct artnet_todcontrol_s {
 	uint8_t 	id[8];
@@ -322,7 +314,7 @@ struct artnet_todcontrol_s {
 } __attribute__( ( packed ) );
 
 
-typedef struct artnet_todcontrol_s artnet_todcontrol_t ;
+typedef struct artnet_todcontrol_s artnet_todcontrol_t;
 
 
 
@@ -347,10 +339,7 @@ struct artnet_rdm_s {
 } __attribute__( ( packed ) );
 
 
-typedef struct artnet_rdm_s artnet_rdm_t ;
-
-
-
+typedef struct artnet_rdm_s artnet_rdm_t;
 
 
 struct artnet_firmware_reply_s {
@@ -364,7 +353,7 @@ struct artnet_firmware_reply_s {
 	uint8_t		spare[21];
 } __attribute__( ( packed ) );
 
-typedef struct artnet_firmware_reply_s artnet_firmware_reply_t ;
+typedef struct artnet_firmware_reply_s artnet_firmware_reply_t;
 
 
 
@@ -380,23 +369,20 @@ typedef union {
 	artnet_toddata_t toddata;
 	artnet_firmware_t firmware;
 	artnet_firmware_reply_t firmwarer;
-	artnet_todcontrol_t todcontrol ;
-	artnet_rdm_t rdm ;
-	
+	artnet_todcontrol_t todcontrol;
+	artnet_rdm_t rdm;
 } artnet_packet_union_t; 
 
 
 // a packet, containing data, length, type and a src/dst address
 typedef struct {
-	int length ;
+	int length;
 	struct in_addr from;
 	struct in_addr to;
 	artnet_packet_type_t type;
-	artnet_packet_union_t data ;
-} artnet_packet_t ;
+	artnet_packet_union_t data;
+} artnet_packet_t;
 
-typedef artnet_packet_t *artnet_packet ;
-
-
+typedef artnet_packet_t *artnet_packet;
 
 #endif

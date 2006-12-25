@@ -97,7 +97,7 @@ void handle_dmx(node n, artnet_packet p) {
 		return ;
 
 	data_length = (int) bytes_to_short(p->data.admx.lengthHi, p->data.admx.length) ;
-	data_length = min(data_length, ARTNET_MAX_DMX) ;
+	data_length = min(data_length, ARTNET_DMX_LENGTH) ;
 
 	// find matching output ports
 	for(i=0; i < ARTNET_MAX_PORTS ; i++) {

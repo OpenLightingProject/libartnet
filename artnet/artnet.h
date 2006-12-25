@@ -176,7 +176,7 @@ typedef struct artnet_node_entry_s {
 	uint8_t		swmacro;
 	uint8_t		swremote;
 	uint8_t		style;
-	uint8_t		mac[8];					/**< The MAC address of the node */
+	uint8_t		mac[ARTNET_MAC_SIZE];				/**< The MAC address of the node */
 } artnet_node_entry_t;
 
 /** A pointer to an artnet_node_entry_t */
@@ -238,9 +238,9 @@ extern int artnet_send_tod_request(artnet_node vn) ;
 extern int artnet_send_tod_control(artnet_node vn, uint8_t address, artnet_tod_command_code action) ;
 extern int artnet_send_tod_data(artnet_node vn, int port) ;
 extern int artnet_send_rdm(artnet_node vn, uint8_t address, uint8_t *data, int length) ;
-extern int artnet_add_rdm_device(artnet_node vn, int port, uint8_t uid[6]) ;
+extern int artnet_add_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_WIDTH]) ;
 extern int artnet_add_rdm_devices(artnet_node vn, int port, uint8_t *uid, int count) ;
-extern int artnet_remove_rdm_device(artnet_node vn, int port, uint8_t uid[6]) ;
+extern int artnet_remove_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_WIDTH]) ;
 
 // recv functions
 extern uint8_t *artnet_read_dmx(artnet_node n, int port_id, int *length) ;

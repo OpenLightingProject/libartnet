@@ -79,7 +79,7 @@
 #define PORT_DISABLE_MASK 0x01
 
 #define TOD_RESPONSE_FULL 0x00
-#define TOD_RESPONSE_NAK 0x00 ;
+#define TOD_RESPONSE_NAK 0x00;
 
 #define MIN_PACKET_SIZE 10
 
@@ -127,7 +127,7 @@
 #define short_get_high_byte(x) ((HIGH_BYTE & x) >> 8)
 #define short_get_low_byte(x)  (LOW_BYTE & x)
 
-#define bytes_to_short(h,l) ( ((h << 8) & 0xff00) | (l & 0x00FF) ) ;
+#define bytes_to_short(h,l) ( ((h << 8) & 0xff00) | (l & 0x00FF) );
 
 /*
  * These are enums for fields in packets
@@ -159,7 +159,7 @@ typedef enum {
 	ARTNET_RCDMXSHORT,
 	ARTNET_RCFIRMWAREFAIL,
 	ARTNET_RCUSERFAIL
-} artnet_node_report_code ;
+} artnet_node_report_code;
 
 // these define the types of node that can exist
 // note it's different from artnet_node_type
@@ -190,7 +190,7 @@ typedef enum  {
 	ARTNET_FIRMWARE_UBEAFIRST = 0x03,	
 	ARTNET_FIRMWARE_UBEACONT = 0x04,	
 	ARTNET_FIRMWARE_UBEALAST = 0x05,	
-} artnet_firmware_type_code ;
+} artnet_firmware_type_code;
 
 // ArtFirmwareReply
 //-----------------------------------------------------------------------------
@@ -209,41 +209,41 @@ typedef enum  {
 
 // packet callbacks have a function and some user data
 typedef struct {
-	int (*fh)(artnet_node n, void *p, void *data) ;
+	int (*fh)(artnet_node n, void *p, void *data);
 	void *data;	
-} callback_t ;
+} callback_t;
 
 /*
  * the dmx callback is triggered when a dmx packet arrives
  */
 typedef struct {
-	int (*fh)(artnet_node n, int portid, void *data) ;
+	int (*fh)(artnet_node n, int portid, void *data);
 	void *data;	
-} dmx_callback_t ;
+} dmx_callback_t;
 
 /*
  * firmware callback is triggered when a firmware recieve has been completed sucessfully
  */
 typedef struct {
-	int (*fh)(artnet_node n, int ubea, uint16_t *data, int length, void *d) ;
+	int (*fh)(artnet_node n, int ubea, uint16_t *data, int length, void *d);
 	void *data;	
-} firmware_callback_t ;
+} firmware_callback_t;
 
 /*
  * called when a node is remote programmed
  */
 typedef struct {
-	int (*fh)(artnet_node n, void *d) ;
+	int (*fh)(artnet_node n, void *d);
 	void *data;	
-} program_callback_t ;
+} program_callback_t;
 
 /*
  * called when a node receives rdm data
  */
 typedef struct {
-	int (*fh)(artnet_node n, int address, uint8_t *rdm, int length, void *d) ;
+	int (*fh)(artnet_node n, int address, uint8_t *rdm, int length, void *d);
 	void *data;	
-} rdm_callback_t ;
+} rdm_callback_t;
 
 
 // struct to store callbacks
@@ -259,17 +259,16 @@ typedef struct {
 	callback_t toddata;
 	callback_t todcontrol;
 	callback_t rdm;
-	
 	callback_t ipprog;
-	callback_t firmware ;
+	callback_t firmware;
 	callback_t firmware_reply;
-	dmx_callback_t dmx_c ;
-	firmware_callback_t firmware_c ;
-	program_callback_t program_c ;
+	dmx_callback_t dmx_c;
+	firmware_callback_t firmware_c;
+	program_callback_t program_c;
 	rdm_callback_t	rdm_c;
-	dmx_callback_t rdm_init_c ;
-	dmx_callback_t rdm_tod_c ;
-} node_callbacks_t ;
+	dmx_callback_t rdm_init_c;
+	dmx_callback_t rdm_tod_c;
+} node_callbacks_t;
 
 
 // End callback structures
@@ -283,13 +282,15 @@ typedef struct {
 
 // first a generic port
 typedef struct {
-	uint8_t addr ;					// the port address
-	uint8_t default_addr ;			// the address set by the hardware
-	uint8_t net_ctl ;				// if the port address is under network control
-	uint8_t status ;				// status of the port
-	uint8_t enabled ;						//  true if the port has had it's address set, this is internal only, it's not used by the ArtNet protocol, otherwise the node keeps picking up packets for the 0x00 port
+	uint8_t addr;				// the port address
+	uint8_t default_addr;		// the address set by the hardware
+	uint8_t net_ctl;			// if the port address is under network control
+	uint8_t status;				// status of the port
+	uint8_t enabled;			// true if the port has had it's address set, this is internal only,
+								// it's not used by the ArtNet protocol, otherwise the node keeps
+								// picking up packets for the 0x00 port
 	tod_t tod;
-} g_port_t ;
+} g_port_t;
 
 /**
  * struct to represent an input port
@@ -298,8 +299,8 @@ typedef struct {
  */
 typedef struct {
 	g_port_t port;
-	uint8_t seq ;
-} input_port_t ;
+	uint8_t seq;
+} input_port_t;
 
 
 /**
@@ -308,7 +309,7 @@ typedef struct {
 typedef enum {
 	ARTNET_MERGE_HTP,
 	ARTNET_MERGE_LTP
-} merge_t ;
+} merge_t;
 
 /**
  * struct to represent an output port
@@ -325,17 +326,18 @@ typedef enum {
 typedef struct {
 	g_port_t port;
 	int	length;								// the length of the data THAT HAS CHANGED since the last dmx packet
-	uint8_t enabled ;						//  true if the port has had it's address set, this is internal only, it's not used by the ArtNet protocol, otherwise the node keeps picking up packets for the 0x00 port
-	uint8_t	data[ARTNET_MAX_DMX] ;			// output data
-	// for merging
-	merge_t merge_mode;
-	uint8_t dataA[ARTNET_MAX_DMX] ;
-	uint8_t dataB[ARTNET_MAX_DMX] ;
-	time_t timeA ;
-	time_t timeB ;
+	uint8_t enabled;						// true if the port has had it's address set, this is internal only,
+											// it's not used by the ArtNet protocol, otherwise the node keeps
+											// picking up packets for the 0x00 port
+	uint8_t	data[ARTNET_DMX_LENGTH];		// output data
+	merge_t merge_mode;						// for merging
+	uint8_t dataA[ARTNET_DMX_LENGTH];
+	uint8_t dataB[ARTNET_DMX_LENGTH];
+	time_t timeA;
+	time_t timeB;
 	SI ipA;
 	SI ipB;
-} output_port_t ;
+} output_port_t;
 
 // use defines to hide the inner structures
 #define port_addr port.addr
@@ -360,30 +362,30 @@ typedef struct {
  * and the address of the peer. It's also used for receiving firmware
  */
 typedef struct {
-	uint16_t	*data ;
-	int			bytes_current ;
-	int 		bytes_total ;
+	uint16_t	*data;
+	int			bytes_current;
+	int 		bytes_total;
 	struct 		in_addr peer;
-	int			ubea ;
-	time_t 		last_time ;
-	int			expected_block ;
+	int			ubea;
+	time_t 		last_time;
+	int			expected_block;
 	int 		(*callback)(artnet_node n, artnet_firmware_status_code code, void *d);
 	void 		*user_data;
-} firmware_transfer_t ;
+} firmware_transfer_t;
 
 /*
  * The node entry in the LL. It contains the public entry, as well as some stuff
  * we don't want public like firmware
  */
 typedef struct node_entry_private_s {
-	artnet_node_entry_t pub ;
+	artnet_node_entry_t pub;
 	struct node_entry_private_s *next;
-	firmware_transfer_t firmware ;
-	SI ip ;								// don't rely on the ip address that the node
+	firmware_transfer_t firmware;
+	SI ip;								// don't rely on the ip address that the node
 										// sends, they could be faking it. This is the ip that
 										// the pollreply was send from
 										// besides it's annoying to deal with a uint8_t[4]
-} node_entry_private_t ;
+} node_entry_private_t;
 
 /**
  * The node list stores a pointer to the first,last and current 
@@ -395,7 +397,7 @@ typedef struct {
 	node_entry_private_t *current;
 	node_entry_private_t *last;
 	int length;	
-} node_list_t ;
+} node_list_t;
 
 
 // End node list structures
@@ -407,7 +409,7 @@ typedef enum {
 	ARTNET_OFF,
 	ARTNET_STANDBY,
 	ARTNET_ON
-} node_status_t ;
+} node_status_t;
 
 
 // struct to hold the state of the node
@@ -416,91 +418,90 @@ typedef struct {
 	node_status_t mode;
 	SI reply_addr;
 	SI ip_addr;
-	SI bcast_addr ;
-	uint8_t hw_addr[6] ;
-	uint8_t default_subnet ;
-	uint8_t subnet_net_ctl ;
+	SI bcast_addr;
+	uint8_t hw_addr[ARTNET_MAC_SIZE];
+	uint8_t default_subnet;
+	uint8_t subnet_net_ctl;
 	int send_apr_on_change;
-	int ar_count ;
-	int verbose ;
-	char short_name[ARTNET_SHORT_NAME_LENGTH] ;
-	char long_name[ARTNET_LONG_NAME_LENGTH] ;
-	char report[ARTNET_REPORT_LENGTH] ;
-	uint8_t subnet ;
-	uint8_t oem_hi ;
-	uint8_t oem_lo ;
-	uint8_t esta_hi ;
-	uint8_t esta_lo ;
-
+	int ar_count;
+	int verbose;
+	char short_name[ARTNET_SHORT_NAME_LENGTH];
+	char long_name[ARTNET_LONG_NAME_LENGTH];
+	char report[ARTNET_REPORT_LENGTH];
+	uint8_t subnet;
+	uint8_t oem_hi;
+	uint8_t oem_lo;
+	uint8_t esta_hi;
+	uint8_t esta_lo;
 	artnet_node_report_code report_code;
-} node_state_t ;
+} node_state_t;
 
 
 typedef struct {
-	struct artnet_node_s *peer ;				// peer if we've joined a group
-	int 	master ;
-} node_peering_t ;
+	struct artnet_node_s *peer;				// peer if we've joined a group
+	int 	master;
+} node_peering_t;
 
 
 /**
  * The main node structure
  */
 typedef struct artnet_node_s{
-	int sd ;									// the two sockets
+	int sd;									// the two sockets
 	node_state_t state;							// the state struct
 	node_callbacks_t callbacks;					// the callbacks struct
 	struct ports_s {
-		uint8_t	types[ARTNET_MAX_PORTS] ;		// type of port
-		input_port_t in[ARTNET_MAX_PORTS] ;		// input ports
-		output_port_t out[ARTNET_MAX_PORTS] ;	// output ports
+		uint8_t	types[ARTNET_MAX_PORTS];		// type of port
+		input_port_t in[ARTNET_MAX_PORTS];		// input ports
+		output_port_t out[ARTNET_MAX_PORTS];	// output ports
 	} ports;
-	artnet_reply_t 		ar_temp ;				// buffered artpoll reply packet
-	node_list_t 		node_list ;				// node list
-	firmware_transfer_t firmware ;				// firmware details
-	node_peering_t 		peering ;				// peer if we've joined a group
-} artnet_node_t ;
+	artnet_reply_t 		ar_temp;				// buffered artpoll reply packet
+	node_list_t 		node_list;				// node list
+	firmware_transfer_t firmware;				// firmware details
+	node_peering_t 		peering;				// peer if we've joined a group
+} artnet_node_t;
 
 
-typedef artnet_node_t *node ;
+typedef artnet_node_t *node;
 
 /*
  * Function definitions follow
  */
 
 // exported from artnet.c
-node_entry_private_t *find_private_entry( node n, artnet_node_entry e)  ;
-void check_timeouts(node n) ;
-node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip ) ;
-int artnet_nl_update(node_list_t *nl, artnet_packet reply) ;
+node_entry_private_t *find_private_entry( node n, artnet_node_entry e);
+void check_timeouts(node n);
+node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip);
+int artnet_nl_update(node_list_t *nl, artnet_packet reply);
 
 
 // exported from receive.c
-int handle(node n, artnet_packet p ) ;
-int16_t get_type(artnet_packet p ) ;
-void reset_firmware_upload(node n) ;
+int handle(node n, artnet_packet p);
+int16_t get_type(artnet_packet p);
+void reset_firmware_upload(node n);
 
 
 // exported from transmit.c
-int artnet_tx_poll(node n, const char *ip,  artnet_ttm_value_t ttm) ;
-int artnet_tx_poll_reply(node n, int reply) ;
-int artnet_tx_tod_data(node n, int id) ;
-int artnet_tx_firmware_reply(node n, in_addr_t ip, artnet_firmware_status_code code) ;
-int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm ) ;
-int artnet_tx_tod_request(node n) ;
-int artnet_tx_tod_control(node n, uint8_t address, artnet_tod_command_code action) ;
-int artnet_tx_rdm(node n, uint8_t address, uint8_t *data, int length) ;
-int artnet_tx_build_art_poll_reply(node n) ;
+int artnet_tx_poll(node n, const char *ip,  artnet_ttm_value_t ttm);
+int artnet_tx_poll_reply(node n, int reply);
+int artnet_tx_tod_data(node n, int id);
+int artnet_tx_firmware_reply(node n, in_addr_t ip, artnet_firmware_status_code code);
+int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm );
+int artnet_tx_tod_request(node n);
+int artnet_tx_tod_control(node n, uint8_t address, artnet_tod_command_code action);
+int artnet_tx_rdm(node n, uint8_t address, uint8_t *data, int length);
+int artnet_tx_build_art_poll_reply(node n);
 
 
 // exported from network.c
-int artnet_net_recv(node n, artnet_packet p, int block) ;
-int artnet_net_send(node n, artnet_packet p) ;
-int artnet_net_set_non_block(node n) ;
-int artnet_net_init(node n, const char *ip) ;
-int artnet_net_start(node n) ;
-int artnet_net_close(node n) ;
-int artnet_net_join(node n1, node n2) ;
-int artnet_net_set_fdset(node n, fd_set *fdset) ;
+int artnet_net_recv(node n, artnet_packet p, int block);
+int artnet_net_send(node n, artnet_packet p);
+int artnet_net_set_non_block(node n);
+int artnet_net_init(node n, const char *ip);
+int artnet_net_start(node n);
+int artnet_net_close(node n);
+int artnet_net_join(node n1, node n2);
+int artnet_net_set_fdset(node n, fd_set *fdset);
 
 
 #endif
