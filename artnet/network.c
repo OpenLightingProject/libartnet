@@ -350,7 +350,7 @@ e_return:
  *
  */
 int artnet_net_init(node n, const char *ip) {
-	iface_t *ift_head, *ift ;
+	iface_t *ift, *ift_head = NULL ;
 	struct in_addr wanted_ip ;
 	
 	int found = FALSE ;
