@@ -323,6 +323,7 @@ static int get_ifaces(iface_t **ift_head_r) {
 				
 		} else {
 			// 
+			//printf("family %i\n" , ifr->ifr_addr.sa_family );
 		}	
 	}
 	*ift_head_r = ift_head;
