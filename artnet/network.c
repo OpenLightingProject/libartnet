@@ -422,7 +422,7 @@ int artnet_net_start(node n) {
 	node tmp;
 	int ret = ARTNET_EOK;
 
-	// only attempt to bind to the broadcast if we are not in compat and are the group master
+	// only attempt to bind to the broadcast if we are the group master
 	if ( n->peering.master == TRUE) {
 
 		/* create socket */

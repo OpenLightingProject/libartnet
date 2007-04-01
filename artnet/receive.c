@@ -41,7 +41,6 @@ int check_callback(node n, artnet_packet p, callback_t callback) {
  * Handle an artpoll packet
  */
 int handle_poll(node n, artnet_packet p) {
-
 	// run callback if defined
 	if(check_callback(n, p, n->callbacks.poll) )
 		return ARTNET_EOK;

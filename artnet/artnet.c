@@ -319,7 +319,7 @@ int artnet_read(artnet_node vn, int timeout) {
  *
  * Then the nodes must be joined so that they can share the socket
  * bound to the broadcast address.
- *
+ * TODO: use IP_PKTINFO so that packets are send from the correct source ip
  *
  * @param vn1 The artnet node
  * @param vn2 The second artnet node
@@ -333,14 +333,25 @@ int artnet_join(artnet_node vn1, artnet_node vn2) {
 
   node n1 = (node) vn1;
   node n2 = (node) vn2;
+  node tmp, n;
 
-  if (n1->peering.peer == NULL && n2->peering.peer == NULL) {
-    n1->peering.peer = n2;
-    n2->peering.peer = n1;
-    n2->peering.master = FALSE;
-
-    return ARTNET_EOK;
+  if (n1->state.mode == ARTNET_ON || n2->state.mode == ARTNET_ON) {
+    artnet_error("%s called after artnet_start", __FUNCTION__);
+    return ARTNET_EACTION;
   }
+
+  tmp = n1->peering.peer == NULL ? n1 : n1->peering.peer;
+  n1->peering.peer = n2;
+  for(n = n2; n->peering.peer != NULL && n->peering.peer != n2; n = n->peering.peer) ;
+  n->peering.peer = tmp;
+
+  // make sure there is only 1 master
+  for(n = n1->peering.peer; n != n1; n = n->peering.peer) {
+    n->peering.master = FALSE;
+  }
+
+  n1->peering.master = TRUE;
+
   return ARTNET_ESTATE;
 }
 
