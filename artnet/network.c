@@ -96,7 +96,6 @@ static iface_t *check_iface(struct ifaddrs *ifa) {
     sin = (struct sockaddr_in *) ifa->ifa_broadaddr;
     ret->bcast_addr.sin_addr = sin->sin_addr;
   }
-
   return ret;
 }
 
@@ -122,7 +121,6 @@ static int get_ifaces(iface_t **ift_head_r) {
   if_head = 0;
   if_iter = 0;
   for(ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
-
     if_tmp = check_iface(ifa_iter);
     if (if_tmp) {
       // We got new usable interface
@@ -139,17 +137,17 @@ static int get_ifaces(iface_t **ift_head_r) {
   // Match up the interfaces with the corrosponding AF_PACKET interface
   // to fetch the hw addresses
   //
-  // XXX: Will probably not work on OS X, it should
+  // TODO: Will probably not work on OS X, it should
   //      return AF_LINK -type sockaddr
   for(if_iter = if_head; if_iter!=NULL; if_iter = if_iter->next) {
     if_name = strdup(if_iter->if_name);
 
     // if this is an alias, get mac of real interface
-    if ( ( cptr = strchr(if_name, ':') ))
+    if ((cptr = strchr(if_name, ':')))
       *cptr = 0;
 
     // Find corresponding iface_t -structure
-    for(ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
+    for (ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
       if ((! ifa_iter->ifa_addr) || ifa_iter->ifa_addr->sa_family  != AF_PACKET)
         continue;
 
@@ -169,7 +167,6 @@ static int get_ifaces(iface_t **ift_head_r) {
 }
 
 #else
-
 
 /*
  *
@@ -215,9 +212,9 @@ static int get_ifaces(iface_t **ift_head_r) {
 
     ifc.ifc_len = len;
     ifc.ifc_buf = buf;
-    if ( ioctl(sd, SIOCGIFCONF, &ifc) < 0 ) {
-      if ( errno != EINVAL || lastlen != 0 ) {
-        artnet_error("%s : ioctl error %s", __FUNCTION__, strerror(errno) );
+    if (ioctl(sd, SIOCGIFCONF, &ifc) < 0) {
+      if (errno != EINVAL || lastlen != 0) {
+        artnet_error("%s : ioctl error %s", __FUNCTION__, strerror(errno));
         ret = ARTNET_ENET;
         goto e_free;
       }
@@ -231,14 +228,14 @@ static int get_ifaces(iface_t **ift_head_r) {
   }
 
   // loop through each iface
-  for(ptr = buf; ptr < buf + ifc.ifc_len; ) {
+  for (ptr = buf; ptr < buf + ifc.ifc_len;) {
 
-    ifr = (struct ifreq* ) ptr;
+    ifr = (struct ifreq*) ptr;
 
     // work out length here
 #ifdef HAVE_SOCKADDR_SA_LEN
 
-    len = max(sizeof(struct sockaddr), ifr->ifr_addr.sa_len );
+    len = max(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);
 
 #else
     switch (ifr->ifr_addr.sa_family) {
@@ -266,17 +263,17 @@ static int get_ifaces(iface_t **ift_head_r) {
       }
 
       flags = ifrcopy.ifr_flags;
-      if ( (flags & IFF_UP) == 0)
+      if ((flags & IFF_UP) == 0)
         continue; //skip down interfaces
 
-      if ( (flags & IFF_LOOPBACK) )
+      if ((flags & IFF_LOOPBACK))
         continue; //skip lookback
 
       // interesting iface, better malloc for it ..
-      ift = calloc(1, sizeof(iface_t) );
+      ift = calloc(1, sizeof(iface_t));
 
       if (ift == NULL) {
-        artnet_error("%s : calloc error %s" , __FUNCTION__, strerror(errno) );
+        artnet_error("%s : calloc error %s" , __FUNCTION__, strerror(errno));
         ret = ARTNET_EMEM;
         goto e_free_list;
       }
@@ -309,11 +306,11 @@ static int get_ifaces(iface_t **ift_head_r) {
 #ifdef SIOCGIFHWADDR
       if (flags & SIOCGIFHWADDR) {
         if (ioctl(sd, SIOCGIFHWADDR, &ifrcopy) < 0) {
-          artnet_error("%s : ioctl error %s" , __FUNCTION__, strerror(errno));
+          artnet_error("%s : ioctl error %s", __FUNCTION__, strerror(errno));
           ret = ARTNET_ENET;
           goto e_free_list;
         }
-        memcpy(&ift->hw_addr , ifrcopy.ifr_hwaddr.sa_data, ARTNET_MAC_SIZE);
+        memcpy(&ift->hw_addr, ifrcopy.ifr_hwaddr.sa_data, ARTNET_MAC_SIZE);
       }
 #endif
 
@@ -321,7 +318,6 @@ static int get_ifaces(iface_t **ift_head_r) {
      * and hware addresses
      * i'll leave that for another day
      */
-
     } else {
       //
       //printf("family %i\n" , ifr->ifr_addr.sa_family );
@@ -355,7 +351,7 @@ int artnet_net_init(node n, const char *ip) {
   int i;
   int ret = ARTNET_EOK;
 
-  if ( (ret = get_ifaces(&ift_head)) )
+  if ((ret = get_ifaces(&ift_head)))
     goto e_return;
 
   if (n->state.verbose) {
@@ -364,9 +360,9 @@ int artnet_net_init(node n, const char *ip) {
       printf("IP: %s\n", inet_ntoa(ift->ip_addr.sin_addr));
       printf("  bcast: %s\n" , inet_ntoa(ift->bcast_addr.sin_addr));
       printf("  hwaddr: ");
-        for(i = 0; i < ARTNET_MAC_SIZE; i++) {
-          printf("%hhx:", ift->hw_addr[i]);
-        }
+      for (i = 0; i < ARTNET_MAC_SIZE; i++) {
+        printf("%hhx:", ift->hw_addr[i]);
+      }
       printf("\n");
     }
     printf("#########################\n");
@@ -424,7 +420,7 @@ int artnet_net_start(node n) {
   int ret = ARTNET_EOK;
 
   // only attempt to bind to the broadcast if we are the group master
-  if ( n->peering.master == TRUE) {
+  if (n->peering.master == TRUE) {
 
     /* create socket */
     n->sd = socket(PF_INET, SOCK_DGRAM, 0);
@@ -446,23 +442,22 @@ int artnet_net_start(node n) {
     /* bind sockets
      * we do one for the ip address and one for the broadcast address
      */
-    if ( bind(n->sd, (SA *) &servAddr, sizeof(servAddr)) == -1 ) {
+    if (bind(n->sd, (SA *) &servAddr, sizeof(servAddr)) == -1) {
       artnet_error("Failed to bind to socket %s", strerror(errno));
       ret = ARTNET_ENET;
       goto e_bind1;
     }
 
     // allow bcasting
-    if ( setsockopt(n->sd, SOL_SOCKET, SO_BROADCAST, &bcast_flag, sizeof(int)) == -1) {
+    if (setsockopt(n->sd, SOL_SOCKET, SO_BROADCAST, &bcast_flag, sizeof(int)) == -1) {
       artnet_error("Failed to bind to socket %s", strerror(errno));
       ret =  ARTNET_ENET;
       goto e_setsockopt;
     }
 
     // now we need to propagate the sd to all our peers
-    for( tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer)
+    for(tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer)
       tmp->sd = n->sd;
-
   }
 
   return ARTNET_EOK;
@@ -496,7 +491,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
   tv.tv_sec = delay;
   p->length = 0;
 
-  switch ( select(maxfdp1, &rset, NULL, NULL, &tv) ) {
+  switch (select(maxfdp1, &rset, NULL, NULL, &tv)) {
     case 0:
       // timeout
       return RECV_NO_DATA;
@@ -515,8 +510,9 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
   // need a check here for the amount of data read
   // should prob allow an extra byte after data, and pass the size as sizeof(Data) +1
   // then check the size read and if equal to size(data)+1 we have an error
-  if ( (len = recvfrom(n->sd, &(p->data), sizeof(p->data), 0, (SA*) &cliAddr, &cliLen) )< 0) {
-    artnet_error("%s : recvfrom error %s", __FUNCTION__, strerror(errno) );
+  len = recvfrom(n->sd, &(p->data), sizeof(p->data), 0, (SA*) &cliAddr, &cliLen);
+  if (len < 0) {
+    artnet_error("%s : recvfrom error %s", __FUNCTION__, strerror(errno));
     return ARTNET_ENET;
   }
 
@@ -527,8 +523,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
 
   p->length = len;
   memcpy(&(p->from), &cliAddr.sin_addr, sizeof(struct in_addr));
-  // should set to in here
-
+  // should set to in here if we need it
   return ARTNET_EOK;
 
 }
@@ -603,7 +598,6 @@ int artnet_net_set_fdset (node n, fd_set *fdset) {
 
 
 int artnet_net_close(node n) {
-
   if (close(n->sd)) {
     artnet_error(strerror(errno));
     return ARTNET_ENET;

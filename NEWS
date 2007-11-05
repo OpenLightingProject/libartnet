@@ -1,3 +1,7 @@
+03/11/2006 libartnet-1.0.6
+
+ ArtNet II support
+
 24/12/2006 libartnet-1.0.4
 
  Fixed the compile time error for OS X

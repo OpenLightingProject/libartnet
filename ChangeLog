@@ -1,35 +1,41 @@
+4/11/2007 Simon Newton <<nomis52@westnet.com.au>
+    * Removed artnet_init
+    * cleaned up code style
+    * removed #defines
+    * implemented Artnet II
+
 25/12/2006 Simon Newton <<nomis52@westnet.com.au>
 
-	* minor code cleanup, removed a bunch of magic numbers
+    * minor code cleanup, removed a bunch of magic numbers
 
 24/12/2006 Simon Newton <<nomis52@westnet.com.au>
 
-	* bug fix for OS X
-
-12/6/2006 Simon Newton <<nomis52@westnet.com.au>
-	
-	* applied patches to network.c from Justin Cormack to skip interfaces
-		without addresses
+    * bug fix for OS X
 
 12/6/2006 Simon Newton <<nomis52@westnet.com.au>
 
-	* added functions to set the oem and esta codes
+    * applied patches to network.c from Justin Cormack to skip interfaces
+      without addresses
+
+12/6/2006 Simon Newton <<nomis52@westnet.com.au>
+
+    * added functions to set the oem and esta codes
 
 9/5/2006 Simon Newton <<nomis52@westnet.com.au>
 
-	* changed to using a single descriptor bound to *.6454
+    * changed to using a single descriptor bound to *.6454
 
 18/4/2006 Simon Newton <<nomis52@westnet.com.au>
 
-	* Received ESTA Manufacturer ID
+    * Received ESTA Manufacturer ID
 
 17/4/2006 Simon Newton <<nomis52@westnet.com.au>
 
-	* Fixed ArtPollReply length bug
+    * Fixed ArtPollReply length bug
 
 16/9/2005 Simon Newton <<nomis52@westnet.com.au>
 
-	* Fixed compile issues on OS X
+    * Fixed compile issues on OS X
 
 28/8/2005 Simon Newton <nomis52@westnet.com.au>
 
@@ -37,18 +43,18 @@
 
 26/8/2005 Simon Newton <nomis52@westnet.com.au>
 
-	* Fixed get_ifaces to return hw addrs correctly for aliased ifaces
+    * Fixed get_ifaces to return hw addrs correctly for aliased ifaces
 
 12/8/2005 Simon Newton <nomis52@westnet.com.au>
 
     * Changed to a new error reporting scheme
     * Applied patch from Samuli Valo to fix get_ifaces on x86-64
-		
+
 7/05/2005 Simon Newton <nomis52@westnet.com.au>
 
    * fixed bug in number of ports reported
    * included tod.h and misc.h :)
-   * fixed typo with IPV6  
+   * fixed typo with IPV6
    * removed static path for pkgconfig data
 
 30/04/2005 Simon Newton <nomis52@westnet.com.au>
@@ -65,14 +71,14 @@
 
 18/04/2005 Simon Newton <nomis52@westnet.com.au>
 
-    * Added the endian conversion functions 
+    * Added the endian conversion functions
 
 12/04/2005 Simon Newton <nomis52@westnet.com.au>
 
     * More OSX fixes
 
 9/04/2005 Simon Newton <nomis52@westnet.com.au>
-    
+
     * Fixed the seg fault if no network interfaces are present
 
 18/3/2005 Simon Newton <nomis52@westnet.com.au>
@@ -80,7 +86,7 @@
     * added artnet_destroy
 
 17/3/2005 Simon Newton <nomis52@westnet.com.au>
-   
+
     * added c++ linking support
 
 16/3/2005 Simon Newton <nomis52@westnet.net>
@@ -104,7 +110,7 @@
 11/2/2005 Simon Newton <nomis52@westnet.net>
 
     * Changed the licence to the LGPL
-    * Added new "debug" parameter to artnet_init() 
+    * Added new "debug" parameter to artnet_init()
     * Fixed LTP bug (L = latest not lowest as I orginally thought)
     * Added firmware receive support - new example program artnet_firmware_node
     * Added firmware send support - new example program artnet_firmware_server
