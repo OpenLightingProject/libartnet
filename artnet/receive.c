@@ -41,7 +41,7 @@ int check_callback(node n, artnet_packet p, callback_t callback) {
  */
 int handle_poll(node n, artnet_packet p) {
   // run callback if defined
-  if (check_callback(n, p, n->callbacks.poll) )
+  if (check_callback(n, p, n->callbacks.poll))
     return ARTNET_EOK;
 
   if (n->state.node_type != ARTNET_RAW) {
@@ -73,7 +73,7 @@ void handle_reply(node n, artnet_packet p) {
   artnet_nl_update(&n->node_list, p);
 
   // run callback if defined
-  if (check_callback(n, p, n->callbacks.reply) )
+  if (check_callback(n, p, n->callbacks.reply))
     return;
 
 }
@@ -89,7 +89,7 @@ void handle_dmx(node n, artnet_packet p) {
   in_addr_t ipA, ipB;
 
   // run callback if defined
-  if (check_callback(n, p, n->callbacks.dmx) )
+  if (check_callback(n, p, n->callbacks.dmx))
     return;
 
   data_length = (int) bytes_to_short(p->data.admx.lengthHi, p->data.admx.length);
@@ -275,14 +275,13 @@ int handle_address(node n, artnet_packet p) {
     n->state.subnet = n->state.default_subnet;
     n->state.subnet_net_ctl = FALSE;
 
-  } else if( p->data.addr.swout[i] & PROGRAM_CHANGE_MASK) {
+  } else if (p->data.addr.subnet & PROGRAM_CHANGE_MASK) {
     n->state.subnet = p->data.addr.subnet & ~PROGRAM_CHANGE_MASK;
     n->state.subnet_net_ctl = TRUE;
-
   }
 
   // check if subnet has actually changed
-  if(old_subnet != n->state.subnet) {
+  if (old_subnet != n->state.subnet) {
     // if it does we need to change all port addresses
     for(i=0; i< ARTNET_MAX_PORTS; i++) {
       n->ports.in[i].port_addr = _make_addr(n->state.subnet, n->ports.in[i].port_addr);
@@ -299,14 +298,14 @@ int handle_address(node n, artnet_packet p) {
       n->ports.in[i].port_addr = _make_addr(n->state.subnet, n->ports.in[i].port_default_addr);
       n->ports.in[i].port_net_ctl = FALSE;
 
-    } else if( p->data.addr.swin[i] & PROGRAM_CHANGE_MASK) {
-      n->ports.in[i].port_addr = _make_addr(n->state.subnet, p->data.addr.swin[i] );
+    } else if ( p->data.addr.swin[i] & PROGRAM_CHANGE_MASK) {
+      n->ports.in[i].port_addr = _make_addr(n->state.subnet, p->data.addr.swin[i]);
       n->ports.in[i].port_net_ctl = TRUE;
     }
   }
 
   // program swouts
-  for ( i =0; i < ARTNET_MAX_PORTS; i++) {
+  for (i =0; i < ARTNET_MAX_PORTS; i++) {
     if (p->data.addr.swout[i] == PROGRAM_NO_CHANGE) {
       continue;
     } else if (p->data.addr.swout[i] == PROGRAM_DEFAULTS) {
@@ -314,7 +313,7 @@ int handle_address(node n, artnet_packet p) {
       n->ports.out[i].port_addr = _make_addr(n->state.subnet, n->ports.out[i].port_default_addr);
       n->ports.out[i].port_net_ctl = FALSE;
       n->ports.out[i].port_enabled = TRUE;
-    } else if( p->data.addr.swout[i] & PROGRAM_CHANGE_MASK) {
+    } else if ( p->data.addr.swout[i] & PROGRAM_CHANGE_MASK) {
       n->ports.out[i].port_addr = _make_addr(n->state.subnet, p->data.addr.swout[i]);
       n->ports.in[i].port_net_ctl = TRUE;
       n->ports.out[i].port_enabled = TRUE;
@@ -455,12 +454,12 @@ int handle_tod_request(node n, artnet_packet p) {
  */
 void handle_tod_data(node n, artnet_packet p) {
 
-  if(check_callback(n, p, n->callbacks.toddata))
+  if (check_callback(n, p, n->callbacks.toddata))
     return;
 
   // pass data to app
 
-//  if(n->callbacks.rdm_tod_c.fh != NULL)
+//  if (n->callbacks.rdm_tod_c.fh != NULL)
 //    n->callbacks.rdm_tod_c.fh(n, i, n->callbacks.rdm_tod_c.data);
 
   return;
@@ -472,7 +471,7 @@ int handle_tod_control(node n, artnet_packet p) {
   int i;
   int ret = ARTNET_EOK;
 
-  if(check_callback(n, p, n->callbacks.todcontrol))
+  if (check_callback(n, p, n->callbacks.todcontrol))
     return ARTNET_EOK;
 
   for (i=0; i < ARTNET_MAX_PORTS; i++) {
@@ -508,7 +507,7 @@ int handle_tod_control(node n, artnet_packet p) {
 void handle_rdm(node n, artnet_packet p) {
 
 
-  if(check_callback(n, p, n->callbacks.rdm))
+  if (check_callback(n, p, n->callbacks.rdm))
     return;
 
   printf("rdm data\n");
@@ -531,7 +530,7 @@ int handle_firmware(node n, artnet_packet p) {
   artnet_firmware_status_code response_code = ARTNET_FIRMWARE_FAIL;
 
   // run callback if defined
-  if(check_callback(n, p, n->callbacks.firmware))
+  if (check_callback(n, p, n->callbacks.firmware))
     return ARTNET_EOK;
 
   /*
@@ -573,14 +572,14 @@ int handle_firmware(node n, artnet_packet p) {
       memcpy(n->firmware.data, p->data.firmware.data, block_length);
       n->firmware.bytes_current = block_length;
 
-      if(block_length == length) {
+      if (block_length == length) {
         // this is the first and last packet
         // upload was less than 1k bytes
         // this behaviour isn't in the spec, presumably no firmware will be less that 1k
         response_code = ARTNET_FIRMWARE_ALLGOOD;
 
         // do the callback here
-        if(n->callbacks.firmware_c.fh != NULL)
+        if (n->callbacks.firmware_c.fh != NULL)
           n->callbacks.firmware_c.fh(n, n->firmware.ubea, n->firmware.data,
             n->firmware.bytes_total, n->callbacks.firmware_c.data);
 
@@ -607,7 +606,7 @@ int handle_firmware(node n, artnet_packet p) {
 
     // ok the blockid field is only 1 byte, so it wraps back to 0x00 we
     // need to watch for this
-    if(n->firmware.expected_block > UINT8_MAX &&
+    if (n->firmware.expected_block > UINT8_MAX &&
        (n->firmware.expected_block % (UINT8_MAX+1)) == p->data.firmware.blockId) {
 
       block_id = n->firmware.expected_block;
@@ -642,8 +641,8 @@ int handle_firmware(node n, artnet_packet p) {
 
     // ok the blockid field is only 1 byte, so it wraps back to 0x00 we
     // need to watch for this
-    if(n->firmware.expected_block > UINT8_MAX &&
-       (n->firmware.expected_block % (UINT8_MAX+1) ) == p->data.firmware.blockId) {
+    if (n->firmware.expected_block > UINT8_MAX &&
+       (n->firmware.expected_block % (UINT8_MAX+1)) == p->data.firmware.blockId) {
 
       block_id = n->firmware.expected_block;
     }
@@ -660,7 +659,7 @@ int handle_firmware(node n, artnet_packet p) {
       n->firmware.bytes_current += block_length;
 
       // do the callback here
-      if(n->callbacks.firmware_c.fh != NULL)
+      if (n->callbacks.firmware_c.fh != NULL)
         n->callbacks.firmware_c.fh(n, n->firmware.ubea,
           n->firmware.data,
           n->firmware.bytes_total / sizeof(p->data.firmware.data[0]),
