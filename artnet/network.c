@@ -40,6 +40,8 @@ typedef struct iface_s {
   struct iface_s *next;
 } iface_t;
 
+unsigned long LOOPBACK_IP = 0x7F000001;
+
 
 #ifdef HAVE_GETIFADDRS
  #ifdef HAVE_LINUX_IF_PACKET_H
@@ -223,7 +225,7 @@ static int get_ifaces(iface_t **ift_head_r) {
         break;
       lastlen = ifc.ifc_len;
     }
-    len += IFACE_COUNT_INC;
+    len += IFACE_COUNT_INC * sizeof(struct ifreq);
     free(buf);
   }
 
@@ -320,7 +322,6 @@ static int get_ifaces(iface_t **ift_head_r) {
      */
     } else {
       //
-      //printf("family %i\n" , ifr->ifr_addr.sa_family );
     }
   }
   *ift_head_r = ift_head;
@@ -516,7 +517,8 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
     return ARTNET_ENET;
   }
 
-  if (cliAddr.sin_addr.s_addr == n->state.ip_addr.s_addr) {
+  if (cliAddr.sin_addr.s_addr == n->state.ip_addr.s_addr ||
+      ntohl(cliAddr.sin_addr.s_addr) == LOOPBACK_IP) {
     p->length = 0;
     return ARTNET_EOK;
   }
