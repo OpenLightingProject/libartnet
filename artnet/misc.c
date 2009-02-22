@@ -48,14 +48,14 @@
  * Is vasprintf available on OSX ?
  */
 void artnet_error(const char *fmt, ...) {
-
   va_list ap;
   va_start(ap, fmt);
 
   free(artnet_errstr);
-  vasprintf(&artnet_errstr, fmt , ap) ,
+  if (vasprintf(&artnet_errstr, fmt , ap) < 0)
+    printf("An error occured, but memory could not be allocated"
+           "to display it\n");
   va_end(ap);
-
 }
 
 
