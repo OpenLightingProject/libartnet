@@ -239,11 +239,11 @@ extern int artnet_send_poll_reply(artnet_node n);
 extern int artnet_send_dmx(artnet_node n,
   int port_id,
   int16_t length,
-  uint8_t *data);
+  const uint8_t *data);
 extern int artnet_raw_send_dmx(artnet_node vn,
   uint8_t uni,
   int16_t length,
-  uint8_t *data);
+  const uint8_t *data);
 extern int artnet_send_address(artnet_node n,
   artnet_node_entry e,
   const char *shortName,

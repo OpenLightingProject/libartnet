@@ -608,7 +608,7 @@ int artnet_send_poll_reply(artnet_node vn) {
  *
  * @param vn the artnet_node
  */
-int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, uint8_t *data) {
+int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, const uint8_t *data) {
   node n = (node) vn;
   artnet_packet_t p;
   int ret;
@@ -689,7 +689,7 @@ int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, uint8_t *data) 
  * This allows data to be sent on any universe, not just the ones that have
  * ports configured.
  */
-int artnet_raw_send_dmx(artnet_node vn, uint8_t uni, int16_t length, uint8_t *data) {
+int artnet_raw_send_dmx(artnet_node vn, uint8_t uni, int16_t length, const uint8_t *data) {
   node n = (node) vn;
   artnet_packet_t p;
 
@@ -1166,11 +1166,9 @@ int artnet_set_short_name(artnet_node vn, const char *name) {
   node n = (node) vn;
   check_nullnode(vn);
 
-  strncpy((char *) &n->state.short_name, name, 18);
-  n->state.short_name[17] = 0x00;
-
+  strncpy((char *) &n->state.short_name, name, ARTNET_SHORT_NAME_LENGTH);
+  n->state.short_name[ARTNET_SHORT_NAME_LENGTH-1] = 0x00;
   return artnet_tx_build_art_poll_reply(n);
-
 }
 
 
@@ -1185,15 +1183,14 @@ int artnet_set_long_name(artnet_node vn, const char *name) {
   node n = (node) vn;
   check_nullnode(vn);
 
-  strncpy((char *) &n->state.long_name, name, 64);
-  n->state.long_name[63] = 0x00;
+  strncpy((char *) &n->state.long_name, name, ARTNET_LONG_NAME_LENGTH);
+  n->state.long_name[ARTNET_LONG_NAME_LENGTH-1] = 0x00;
   return artnet_tx_build_art_poll_reply(n);
 }
 
 
 /*
  * Sets the direction and type of port
- *
  *
  * @param vn the artnet_node
  * @param id
