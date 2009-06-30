@@ -11,8 +11,8 @@ AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -32,7 +32,7 @@ AC_FUNC_REALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([inet_ntoa memset select socket strchr strdup strerror])
-AC_CHECK_FUNCS(getifaddrs) 
+AC_CHECK_FUNCS(getifaddrs)
 
 # check for ipv6 support - taken from unp
 AC_MSG_CHECKING(for IPv6 support)
@@ -61,16 +61,17 @@ if test $ac_cv_ipv6 = yes ; then
 fi
 
 
-dnl ##################################################################
-dnl Check if sockaddr{} has sa_len member.
-dnl
+# Check if sockaddr{} has sa_len member.
 AC_CHECK_MEMBER([struct sockaddr.sa_len],
- AC_DEFINE(HAVE_SOCKADDR_SA_LEN, 1, define if socket address structures have length fields),,[
+ AC_DEFINE(HAVE_SOCKADDR_SA_LEN, 1,
+           define if socket address structures have length fields),,
+           [
 #include <sys/types.h>
 #include <sys/socket.h>])
 
+# check for win32
+AM_CONDITIONAL(USING_WIN32, test "$host_os" = 'mingw32')
 
-
-AC_OUTPUT( Makefile \
-	   artnet/Makefile \
-	   libartnet.pc )
+AC_OUTPUT(Makefile \
+          artnet/Makefile \
+          libartnet.pc)
