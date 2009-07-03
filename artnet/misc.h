@@ -18,8 +18,8 @@
  * Copyright (C) 2004-2005 Simon Newton
  */
 
-#ifndef ARTNET_MISC
-#define ARTNET_MISC
+#ifndef ARTNET_MISC_H
+#define ARTNET_MISC_H
 
 #include <errno.h>
 #include <string.h>

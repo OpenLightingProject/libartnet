@@ -14,14 +14,27 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * common.c
- * Constants required for both artnet.h and packets.h
+ * Constants required for both internally and externally
  * Copyright (C) 2004-2006 Simon Newton
  */
 
-#ifndef _defined_artnet_common_h
-#define _defined_artnet_common_h
+#ifndef ARTNET_COMMON_H
+#define ARTNET_COMMON_H
 
-/**
+/*
+ * libartnet error codes
+ */
+enum {
+  ARTNET_EOK = 0,
+  ARTNET_ENET = -1, // network error
+  ARTNET_EMEM = -2, // memory error
+  ARTNET_EARG = -3, // argument error
+  ARTNET_ESTATE = -4, // state error
+  ARTNET_EACTION = -5, // invalid action
+};
+
+
+/*
  * The maximum ports per node built into the ArtNet protocol.
  * This is always 4. Don't change it unless you really know what your doing
  */

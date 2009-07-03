@@ -35,8 +35,8 @@
 #include "misc.h"
 #include "tod.h"
 
-#ifndef _defs_defined
-#define _defs_defined
+#ifndef ARTNET_PRIVATE_H
+#define ARTNET_PRIVATE_H
 
 // these are defined in artnet.c
 extern int ARTNET_PORT;
@@ -480,6 +480,5 @@ int artnet_net_start(node n);
 int artnet_net_close(node n);
 int artnet_net_join(node n1, node n2);
 int artnet_net_set_fdset(node n, fd_set *fdset);
-
 
 #endif

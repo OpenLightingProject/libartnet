@@ -18,8 +18,8 @@
  * Copyright (C) 2004-2007 Simon Newton
  */
 
-#ifndef _defined_artnet_h
-#define _defined_artnet_h
+#ifndef ARTNET_HEADER_H
+#define ARTNET_HEADER_H
 
 #include <stdint.h>
 // order is important here for osx
@@ -27,7 +27,6 @@
 #include <sys/select.h>
 
 #include <artnet/common.h>
-#include <artnet/errors.h>
 
 #ifdef __cplusplus
 extern "C" {

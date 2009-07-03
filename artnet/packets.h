@@ -19,12 +19,11 @@
  */
 
 
-#ifndef _artnet_packets_defined
-#define _artnet_packets_defined
+#ifndef ARTNET_PACKETS_H
+#define ARTNET_PACKETS_H
 
 #include <sys/types.h>
 #include <stdint.h>
-#include <netinet/in.h>
 
 #include <artnet/common.h>
 

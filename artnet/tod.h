@@ -18,28 +18,28 @@
  * Copyright (C) 2004-2005 Simon Newton
  */
 
-#include "common.h"
-#include "errors.h"
+#ifndef ARTNET_TOD_H
+#define ARTNET_TOD_H
 
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
+#include "common.h"
 
-#define TOD_INITIAL_SIZE	100
-#define TOD_INCREMENT		50
+enum { ARTNET_TOD_INITIAL_SIZE = 100 };
+enum { ARTNET_TOD_INCREMENT = 50 };
 
-
-/**
+/*
  * table of devices
  */
 typedef struct {
-		uint8_t	*data;
-		int length;
-		int max_length ;
-} tod_t ;
+  uint8_t *data;
+  int length;
+  int max_length;
+} tod_t;
 
 
-extern int add_tod_uid(tod_t *tod, uint8_t uid[ARTNET_RDM_UID_WIDTH]) ;
-extern int remove_tod_uid(tod_t *tod, uint8_t uid[ARTNET_RDM_UID_WIDTH]) ;
-extern int flush_tod(tod_t *tod) ;
-extern int reset_tod(tod_t *tod) ;
+extern int add_tod_uid(tod_t *tod, uint8_t uid[ARTNET_RDM_UID_WIDTH]);
+extern int remove_tod_uid(tod_t *tod, uint8_t uid[ARTNET_RDM_UID_WIDTH]);
+extern int flush_tod(tod_t *tod);
+extern int reset_tod(tod_t *tod);
+
+#endif

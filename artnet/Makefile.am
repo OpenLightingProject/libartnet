@@ -12,7 +12,7 @@ libartnet_la_LDFLAGS += -no-undefined -liphlpapi -lnetapi32 -lcap -lws2_32 \
                         -ldpnet
 endif
 
-EXTRA_DIST = tod.h misc.h errors.h
+EXTRA_DIST = tod.h misc.h
 
-pkginclude_HEADERS = artnet.h packets.h common.h errors.h
+pkginclude_HEADERS = artnet.h packets.h common.h
 pkgincludedir = $(includedir)/artnet
