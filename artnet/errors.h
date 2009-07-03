@@ -15,13 +15,13 @@
  *
  * errors.h
  * Error codes for libartnet
- * Copyright (C) 2004-2005 Simon Newton
+ * Copyright (C) 2004-2009 Simon Newton
  */
 
 #define ARTNET_EOK  0
-#define ARTNET_ENET -1			// network error
-#define ARTNET_EMEM -2			// memory error
-#define ARTNET_EARG -3			// argument error
-#define ARTNET_ESTATE -4		// state error
-#define ARTNET_EACTION -5		// invalid action
+#define ARTNET_ENET -1      // network error
+#define ARTNET_EMEM -2      // memory error
+#define ARTNET_EARG -3      // argument error
+#define ARTNET_ESTATE -4    // state error
+#define ARTNET_EACTION -5   // invalid action
 
