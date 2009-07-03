@@ -19,8 +19,6 @@
  */
 #include "private.h"
 
-char *artnet_errstr = NULL;
-
 // various constants used everywhere
 int ARTNET_ADDRESS_NO_CHANGE = 0x7f;
 int ARTNET_PORT = 6454;

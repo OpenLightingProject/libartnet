@@ -22,12 +22,6 @@
 #  include <config.h>
 #endif
 
-#include <artnet.h>
-#include <artnet/packets.h>
-
-#include "tod.h"
-#include "misc.h"
-
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -35,6 +29,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+
+#include "artnet.h"
+#include "artnet/packets.h"
+#include "misc.h"
+#include "tod.h"
 
 #ifndef _defs_defined
 #define _defs_defined

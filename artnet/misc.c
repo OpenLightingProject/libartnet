@@ -18,62 +18,39 @@
  * Copyright (C) 2004-2005 Simon Newton
  */
 
-#if HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
-#define _GNU_SOURCE
-#include "private.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include "private.h"
 
-#if HAVE_ENDIAN_H
-# include <endian.h>
-#else
-# ifdef HAVE_PPC_ENDIAN_H
-#  include <ppc/endian.h>
-# else
-#  error No endian defined!
-# endif
-#endif
-
-#include <assert.h>
+// static buffer for the error strings
+char artnet_errstr[256];
 
 /*
- * libartnet error function
- *
+ * Libartnet error function
  * This writes the error string to artnet_errstr, which can be accessed
  * using artnet_strerror();
- *
- * Is vasprintf available on OSX ?
  */
 void artnet_error(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
-
-  free(artnet_errstr);
-  if (vasprintf(&artnet_errstr, fmt , ap) < 0)
-    printf("An error occured, but memory could not be allocated"
-           "to display it\n");
+  vsnprintf(artnet_errstr, sizeof(artnet_errstr), fmt, ap);
   va_end(ap);
 }
 
 
-// converts 4 bytes in big endian order to a 32 bit int
+/*
+ * Converts 4 bytes in big endian order to a 32 bit int
+ */
 int32_t artnet_misc_nbytes_to_32(uint8_t bytes[4]) {
-  int32_t o = 0;
-
-  o = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
-
-  return o;
-
+  return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
 }
 
+/*
+ * Converts an int to an arrany of 4 bytes in big endian format
+ */
 void artnet_misc_int_to_bytes(int data, uint8_t *bytes) {
     bytes[3] = (data & 0x000000FF);
     bytes[2] = (data & 0x0000FF00) >> 8;
     bytes[1] = (data & 0x00FF0000) >> 16;
     bytes[0] = (data & 0xFF000000) >> 24;
 }
-
-
