@@ -19,17 +19,17 @@
  *
  */
 
-//once again, order is an issue here
-#include "private.h"
-
-#include <sys/ioctl.h>
-#include <net/if.h>
-#include <unistd.h>
 #include <errno.h>
+#include <sys/socket.h> // socket before net/if.h for mac
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+#include "private.h"
 
 enum { INITIAL_IFACE_COUNT = 10 };
 enum { IFACE_COUNT_INC = 5 };
-enum { IFNAME_SIZE = 32 };      // 32 sounds a reasonable size
+enum { IFNAME_SIZE = 32 }; // 32 sounds a reasonable size
 
 
 typedef struct iface_s {
@@ -69,8 +69,7 @@ static void free_ifaces(iface_t *head) {
 #ifdef USE_GETIFADDRS
 
 /*
- * check if we are interested in this interface
- *
+ * Check if we are interested in this interface
  * @param ifa  pointer to a ifaddr struct
  */
 static iface_t *check_iface(struct ifaddrs *ifa) {
@@ -86,11 +85,11 @@ static iface_t *check_iface(struct ifaddrs *ifa) {
 
   ret = calloc(1, sizeof(iface_t));
   if (ret == NULL) {
-    artnet_error("%s : calloc error %s" , __FUNCTION__, strerror(errno) );
-    return 0;;
+    artnet_error("%s: calloc error %s" , __FUNCTION__, strerror(errno));
+    return 0;
   }
 
-  sin = (struct sockaddr_in *) ifa->ifa_addr;
+  sin = (struct sockaddr_in*) ifa->ifa_addr;
   ret->ip_addr.sin_addr = sin->sin_addr;
   strncpy(ret->if_name, ifa->ifa_name, IFNAME_SIZE-1);
 
@@ -103,7 +102,6 @@ static iface_t *check_iface(struct ifaddrs *ifa) {
 
 
 /*
- *
  * Returns a linked list of interfaces on this machine using getifaddrs
  *  loopback interfaces are skipped as well as interfaces which are down
  *
@@ -115,7 +113,7 @@ static int get_ifaces(iface_t **ift_head_r) {
   struct sockaddr_ll *sll;
   char *if_name, *cptr;
 
-  if ( getifaddrs(&ifa) != 0) {
+  if (getifaddrs(&ifa) != 0) {
     artnet_error("Error getting interfaces: %s", strerror(errno));
     return ARTNET_ENET;
   }
@@ -127,7 +125,7 @@ static int get_ifaces(iface_t **ift_head_r) {
     if (if_tmp) {
       // We got new usable interface
       if (!if_iter) {
-        if_head = if_iter =  if_tmp;
+        if_head = if_iter = if_tmp;
       } else {
         if_iter->next = if_tmp;
         if_iter = if_tmp;
@@ -141,7 +139,7 @@ static int get_ifaces(iface_t **ift_head_r) {
   //
   // TODO: Will probably not work on OS X, it should
   //      return AF_LINK -type sockaddr
-  for(if_iter = if_head; if_iter!=NULL; if_iter = if_iter->next) {
+  for(if_iter = if_head; if_iter != NULL; if_iter = if_iter->next) {
     if_name = strdup(if_iter->if_name);
 
     // if this is an alias, get mac of real interface
@@ -153,10 +151,10 @@ static int get_ifaces(iface_t **ift_head_r) {
       if ((! ifa_iter->ifa_addr) || ifa_iter->ifa_addr->sa_family  != AF_PACKET)
         continue;
 
-      if (strncmp(if_name, ifa_iter->ifa_name, IFNAME_SIZE)==0) {
+      if (strncmp(if_name, ifa_iter->ifa_name, IFNAME_SIZE) == 0) {
         // Found matching hw-address
-        sll = (struct sockaddr_ll *) ifa_iter->ifa_addr;
-        memcpy(if_iter->hw_addr , sll->sll_addr, ARTNET_MAC_SIZE);
+        sll = (struct sockaddr_ll*) ifa_iter->ifa_addr;
+        memcpy(if_iter->hw_addr, sll->sll_addr, ARTNET_MAC_SIZE);
         break;
       }
     }
