@@ -391,26 +391,27 @@ int artnet_join(artnet_node vn1, artnet_node vn2) {
   return ARTNET_ESTATE;
 }
 
-/**
+
+/*
  * This is used to set handlers for sent/received artnet packets.
  * If you're using a stock standard node you more than likely don't want
- * to set these. See the artnet_set_dmx_callback and artnet_set_firmware_callback .
+ * to set these. See the artnet_set_dmx_callback and artnet_set_firmware_callback.
  * If you want to get down and dirty with artnet packets, you can set this
  * read / manipulate packets as they arrive (or get sent)
  *
- * @param vn     The artnet_node
- * @param handler  The handler to set
- * @param fh    A pointer to a function, set to NULL to turn off
- *             The function should return 0,
- * @param data    Data to be passed to the handler when its called
- *
+ * @param vn The artnet_node
+ * @param handler The handler to set
+ * @param fh A pointer to a function, set to NULL to turn off
+ *           The function should return 0,
+ * @param data Data to be passed to the handler when its called
  * @return 0 on sucess, non 0 on failure
- *
  */
-int artnet_set_handler(artnet_node vn, artnet_handler_name_t handler, int (*fh)(artnet_node n, void *pp, void * d), void *data) {
+int artnet_set_handler(artnet_node vn,
+                       artnet_handler_name_t handler,
+                       int (*fh)(artnet_node n, void *pp, void * d),
+                       void *data) {
   node n = (node) vn;
   callback_t *callback;
-
   check_nullnode(vn);
 
   switch(handler) {
@@ -461,19 +462,19 @@ int artnet_set_handler(artnet_node vn, artnet_handler_name_t handler, int (*fh)(
 /*
  * This is a special callback which is invoked when dmx data is received.
  *
- * @param vn     The artnet_node
- * @param fh    The callback to invoke (parameters passwd are the artnet_node, the port_id
+ * @param vn The artnet_node
+ * @param fh The callback to invoke (parameters passwd are the artnet_node, the port_id
  *           that received the dmx, and some user data
  * @param data    Data to be passed to the handler when its called
- *
  */
-int artnet_set_dmx_handler(artnet_node vn, int (*fh)(artnet_node n,int port, void *d), void *data) {
+int artnet_set_dmx_handler(artnet_node vn,
+                           int (*fh)(artnet_node n, int port, void *d),
+                           void *data) {
   node n = (node) vn;
   check_nullnode(vn);
 
   n->callbacks.dmx_c.fh = fh;
   n->callbacks.dmx_c.data = data;
-
   return ARTNET_EOK;
 }
 
@@ -485,34 +486,32 @@ int artnet_set_dmx_handler(artnet_node vn, int (*fh)(artnet_node n,int port, voi
  * @param fh    The callback to invoke (parameters passwd are the artnet_node, a value which
  *           is true if this was a ubea upload, and some user data
  * @param data    Data to be passed to the handler when its called
- *
  */
-int artnet_set_firmware_handler(artnet_node vn, int (*fh)(artnet_node n, int ubea, uint16_t *data, int length, void *d), void *data) {
+int artnet_set_firmware_handler(
+    artnet_node vn,
+    int (*fh)(artnet_node n, int ubea, uint16_t *data, int length, void *d),
+    void *data) {
   node n = (node) vn;
   check_nullnode(vn);
-
   n->callbacks.firmware_c.fh = fh;
   n->callbacks.firmware_c.data = data;
-
   return ARTNET_EOK;
 }
 
 
 /*
- *
  * @param vn     The artnet_node
  * @param fh    The callback to invoke (parameters passwd are the artnet_node, a value which
  *           is true if this was a ubea upload, and some user data
  * @param data    Data to be passed to the handler when its called
- *
  */
-int artnet_set_program_handler(artnet_node vn, int (*fh)(artnet_node n, void *d), void *data) {
+int artnet_set_program_handler(artnet_node vn,
+                               int (*fh)(artnet_node n, void *d),
+                               void *data) {
   node n = (node) vn;
   check_nullnode(vn);
-
   n->callbacks.program_c.fh = fh;
   n->callbacks.program_c.data = data;
-
   return ARTNET_EOK;
 }
 
@@ -525,35 +524,40 @@ int artnet_set_program_handler(artnet_node vn, int (*fh)(artnet_node n, void *d)
  * @param data    Data to be passed to the handler when its called
  *
  */
-int artnet_set_rdm_handler(artnet_node vn, int (*fh)(artnet_node n, int address, uint8_t *rdm, int length, void *d), void *data) {
+int artnet_set_rdm_handler(
+    artnet_node vn,
+    int (*fh)(artnet_node n, int address, uint8_t *rdm, int length, void *d),
+    void *data) {
   node n = (node) vn;
   check_nullnode(vn);
-
   n->callbacks.rdm_c.fh = fh;
   n->callbacks.rdm_c.data = data;
-
   return ARTNET_EOK;
 }
 
 
-int artnet_set_rdm_initiate_handler(artnet_node vn, int (*fh)(artnet_node n, int port, void *d), void *data) {
+int artnet_set_rdm_initiate_handler(
+    artnet_node vn,
+    int (*fh)(artnet_node n, int port, void *d),
+    void *data) {
   node n = (node) vn;
   check_nullnode(vn);
 
   n->callbacks.rdm_init_c.fh = fh;
   n->callbacks.rdm_init_c.data = data;
-
   return ARTNET_EOK;
 }
 
 
-int artnet_set_rdm_tod_handler(artnet_node vn, int (*fh)(artnet_node n, int port, void *d), void *data) {
+int artnet_set_rdm_tod_handler(
+    artnet_node vn,
+    int (*fh)(artnet_node n, int port, void *d),
+    void *data) {
   node n = (node) vn;
   check_nullnode(vn);
 
   n->callbacks.rdm_tod_c.fh = fh;
   n->callbacks.rdm_tod_c.data = data;
-
   return ARTNET_EOK;
 }
 
@@ -569,7 +573,9 @@ int artnet_set_rdm_tod_handler(artnet_node vn, int (*fh)(artnet_node n, int port
  * @param ip the ip address to send to, NULL will broadcast the ArtPoll
  * @param talk_to_me the value for the talk to me
  */
-int artnet_send_poll(artnet_node vn, const char *ip, artnet_ttm_value_t talk_to_me) {
+int artnet_send_poll(artnet_node vn,
+                     const char *ip,
+                     artnet_ttm_value_t talk_to_me) {
   node n = (node) vn;
   check_nullnode(vn);
 
@@ -606,7 +612,10 @@ int artnet_send_poll_reply(artnet_node vn) {
  *
  * @param vn the artnet_node
  */
-int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, const uint8_t *data) {
+int artnet_send_dmx(artnet_node vn,
+                    int port_id,
+                    int16_t length,
+                    const uint8_t *data) {
   node n = (node) vn;
   artnet_packet_t p;
   int ret;
@@ -687,7 +696,10 @@ int artnet_send_dmx(artnet_node vn, int port_id, int16_t length, const uint8_t *
  * This allows data to be sent on any universe, not just the ones that have
  * ports configured.
  */
-int artnet_raw_send_dmx(artnet_node vn, uint8_t uni, int16_t length, const uint8_t *data) {
+int artnet_raw_send_dmx(artnet_node vn,
+                        uint8_t uni,
+                        int16_t length,
+                        const uint8_t *data) {
   node n = (node) vn;
   artnet_packet_t p;
 
@@ -728,7 +740,13 @@ int artnet_raw_send_dmx(artnet_node vn, uint8_t uni, int16_t length, const uint8
 
 
 
-int artnet_send_address(artnet_node vn, artnet_node_entry e,const char *shortName, const char *longName, uint8_t inAddr[ARTNET_MAX_PORTS], uint8_t outAddr[ARTNET_MAX_PORTS], uint8_t subAddr, artnet_port_command_t cmd) {
+int artnet_send_address(artnet_node vn,
+                        artnet_node_entry e,
+                        const char *shortName,
+                        const char *longName,
+                        uint8_t inAddr[ARTNET_MAX_PORTS],
+                        uint8_t outAddr[ARTNET_MAX_PORTS],
+                        uint8_t subAddr, artnet_port_command_t cmd) {
   node n = (node) vn;
   artnet_packet_t p;
   node_entry_private_t *ent = find_private_entry(n,e);
@@ -781,7 +799,9 @@ int artnet_send_address(artnet_node vn, artnet_node_entry e,const char *shortNam
  * NOTE: should have enums here instead of uint8_t for settings
  *
  */
-int artnet_send_input(artnet_node vn, artnet_node_entry e, uint8_t settings[ARTNET_MAX_PORTS]) {
+int artnet_send_input(artnet_node vn,
+                      artnet_node_entry e,
+                      uint8_t settings[ARTNET_MAX_PORTS]) {
   node n = (node) vn;
   artnet_packet_t p;
   node_entry_private_t *ent = find_private_entry(n,e);
@@ -844,13 +864,20 @@ int artnet_send_input(artnet_node vn, artnet_node_entry e, uint8_t settings[ARTN
  * @param fh the callback that is invoked when the transfer is complete
  * @param user_data data to be passed to the callback
  */
-int artnet_send_firmware(artnet_node vn, artnet_node_entry e, int ubea, uint16_t *data, int length, int (*fh)(artnet_node n, artnet_firmware_status_code code, void *d), void *user_data) {
+int artnet_send_firmware(
+    artnet_node vn,
+    artnet_node_entry e,
+    int ubea,
+    uint16_t *data,
+    int length,
+    int (*fh)(artnet_node n, artnet_firmware_status_code code, void *d),
+    void *user_data) {
   node n = (node) vn;
   node_entry_private_t *ent = find_private_entry(n,e);
   int blen;
 
   check_nullnode(vn);
-  if ( e == NULL || ent == NULL)
+  if (e == NULL || ent == NULL)
     return ARTNET_EARG;
 
   if (n->state.mode != ARTNET_ON)
@@ -900,7 +927,9 @@ int artnet_send_firmware(artnet_node vn, artnet_node_entry e, int ubea, uint16_t
  * @param e the node entry to send firmware to
  * @param code the status code to send
  */
-int artnet_send_firmware_reply(artnet_node vn, artnet_node_entry e, artnet_firmware_status_code code) {
+int artnet_send_firmware_reply(artnet_node vn,
+                               artnet_node_entry e,
+                               artnet_firmware_status_code code) {
   node n = (node) vn;
   node_entry_private_t *ent = find_private_entry(n,e);
 
@@ -938,7 +967,9 @@ int artnet_send_tod_request(artnet_node vn) {
  * @param action the action to take
  *
  */
-int artnet_send_tod_control(artnet_node vn, uint8_t address, artnet_tod_command_code action) {
+int artnet_send_tod_control(artnet_node vn,
+                            uint8_t address,
+                            artnet_tod_command_code action) {
   node n = (node) vn;
   check_nullnode(vn);
   return artnet_tx_tod_control(n, address, action);
@@ -963,7 +994,6 @@ int artnet_send_tod_data(artnet_node vn, int port) {
   }
 
   return artnet_tx_tod_data(n, port);
-
 }
 
 
@@ -974,7 +1004,10 @@ int artnet_send_tod_data(artnet_node vn, int port) {
  * @param data the rdm data to send
  * @param length the length of the rdm data
  */
-int artnet_send_rdm(artnet_node vn, uint8_t address, uint8_t *data, int length) {
+int artnet_send_rdm(artnet_node vn,
+                    uint8_t address,
+                    uint8_t *data,
+                    int length) {
   node n = (node) vn;
   check_nullnode(vn);
 
@@ -989,7 +1022,9 @@ int artnet_send_rdm(artnet_node vn, uint8_t address, uint8_t *data, int length) 
  * @param port the port the device is connected to
  * @param the uid of the device
  */
-int artnet_add_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_WIDTH]) {
+int artnet_add_rdm_device(artnet_node vn,
+                          int port,
+                          uint8_t uid[ARTNET_RDM_UID_WIDTH]) {
   node n = (node) vn;
   check_nullnode(vn);
 
@@ -1044,7 +1079,9 @@ int artnet_add_rdm_devices(artnet_node vn, int port, uint8_t *uid, int count) {
  * @param port the port the device was connected to
  * @param the uid of the device
  */
-int artnet_remove_rdm_device(artnet_node vn, int port, uint8_t uid[ARTNET_RDM_UID_WIDTH]) {
+int artnet_remove_rdm_device(artnet_node vn,
+                             int port,
+                             uint8_t uid[ARTNET_RDM_UID_WIDTH]) {
   node n = (node) vn;
   check_nullnode(vn);
 
@@ -1114,7 +1151,6 @@ int artnet_set_node_type(artnet_node vn, artnet_node_type type) {
  *
  * @param vn the artnet_node
  * @param subnet new subnet address
- *
  */
 int artnet_set_subnet_addr(artnet_node vn, uint8_t subnet) {
   node n = (node) vn;
@@ -1170,7 +1206,7 @@ int artnet_set_short_name(artnet_node vn, const char *name) {
 }
 
 
-/**
+/*
  * Sets the long name of the node.
  * The string should be null terminated and a maximium of 64 characters will be used
  *
@@ -1189,13 +1225,15 @@ int artnet_set_long_name(artnet_node vn, const char *name) {
 
 /*
  * Sets the direction and type of port
- *
  * @param vn the artnet_node
  * @param id
  * @param direction
  * @param data
  */
-int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t settings, artnet_port_data_code data) {
+int artnet_set_port_type(artnet_node vn,
+                         int port_id,
+                         artnet_port_settings_t settings,
+                         artnet_port_data_code data) {
   node n = (node) vn;
   check_nullnode(vn);
 
@@ -1205,12 +1243,11 @@ int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t set
   }
 
   n->ports.types[port_id] = settings | data;
-
   return ARTNET_EOK;
 }
 
 
-/**
+/*
  * Sets the port address of the port.
  *
  * Just to set some terms straight:
@@ -1235,7 +1272,10 @@ int artnet_set_port_type(artnet_node vn, int port_id, artnet_port_settings_t set
  * @param dir either ARTNET_INPUT_PORT or ARTNET_OUTPUT_PORT
  * @param addr the new port address
  */
-int artnet_set_port_addr(artnet_node vn, int id, artnet_port_dir_t dir, uint8_t addr) {
+int artnet_set_port_addr(artnet_node vn,
+                         int id,
+                         artnet_port_dir_t dir,
+                         uint8_t addr) {
   node n = (node) vn;
   int ret;
   int changed = 0;
@@ -1337,14 +1377,13 @@ int artnet_get_config(artnet_node vn, artnet_node_config_t *config) {
 }
 
 
-/**
+/*
  * Dumps the node config to stdout.
  *
  * @param vn the artnet_node
  */
 int artnet_dump_config(artnet_node vn) {
   node n = (node) vn;
-
   check_nullnode(vn);
 
   printf("#### NODE CONFIG ####\n");
@@ -1360,12 +1399,10 @@ int artnet_dump_config(artnet_node vn) {
 }
 
 
-/**
+/*
  * Returns the socket descriptor associated with this artnet_node.
  * libartnet currently uses two descriptors per node, one bound
  * to the network address and one bound to the subnet broadcast address
- *
- * Depricated - you should be using artnet_set_fdset instead
  *
  * @param vn the artnet_node
  * @param socket the index of the socket descriptor to fetch (0 or 1)
@@ -1396,7 +1433,7 @@ int artnet_set_fdset(artnet_node vn, fd_set *fdset) {
   if (!fdset)
     return ARTNET_EARG;
 
-  if ( n->state.mode != ARTNET_ON)
+  if (n->state.mode != ARTNET_ON)
     return ARTNET_EACTION;
 
   return artnet_net_set_fdset(n, fdset);
@@ -1412,7 +1449,6 @@ int artnet_set_fdset(artnet_node vn, fd_set *fdset) {
  * @param vn the artnet_node
  * @return the artnet_node_list
  */
-
 artnet_node_list artnet_get_nl(artnet_node vn) {
   node n = (node) vn;
 
@@ -1459,7 +1495,7 @@ artnet_node_entry artnet_nl_next(artnet_node_list vnl) {
 }
 
 
-/**
+/*
  * Returns the length of the artnet_node_list
  * NOTE: this function is not THREAD SAFE
  *
@@ -1473,7 +1509,6 @@ int artnet_nl_get_length(artnet_node_list vnl) {
     return 0;
 
   return nl->length;
-
 }
 
 
@@ -1537,6 +1572,7 @@ node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip) {
   }
   return tmp;
 }
+
 
 /*
  * Find all nodes with a port bound to a particular universe

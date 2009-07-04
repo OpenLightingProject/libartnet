@@ -81,8 +81,13 @@ extern uint16_t HIGH_BYTE;
 #define SA struct sockaddr
 #define SI struct in_addr
 
-#define min(a,b)    ((a) < (b) ? (a) : (b))
-#define max(a,b)    ((a) > (b) ? (a) : (b))
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
 
 // byte ordering macros
 #define bswap_16(x)  ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))

@@ -70,4 +70,14 @@ enum { ARTNET_RDM_UID_WIDTH = 6 };
  */
 enum { ARTNET_MAC_SIZE = 6 };
 
+/*
+ * Length of the ESTA field
+ */
+enum { ARTNET_ESTA_SIZE = 2 };
+
+/*
+ * Length of the IP field
+ */
+enum { ARTNET_IP_SIZE = 4 };
+
 #endif

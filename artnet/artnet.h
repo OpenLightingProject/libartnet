@@ -66,7 +66,8 @@ typedef enum {
   ARTNET_PC_CLR_3 = 0x93,
 } artnet_port_command_t;
 
-/**
+
+/*
  * An enum for the type of data transmitted on a port.
  * As far as I know, only DMX-512 is supported
  */
@@ -80,7 +81,7 @@ typedef enum  {
 } artnet_port_data_code;
 
 
-// defined the status of the firmware transfer
+// defines the status of the firmware transfer
 typedef enum  {
   ARTNET_FIRMWARE_BLOCKGOOD = 0x00,
   ARTNET_FIRMWARE_ALLGOOD = 0x01,
@@ -99,10 +100,11 @@ typedef enum  {
  */
 typedef enum {
   ARTNET_INPUT_PORT = 1,    /**< The input port */
-  ARTNET_OUTPUT_PORT      /**< The output port */
+  ARTNET_OUTPUT_PORT,      /**< The output port */
 } artnet_port_dir_t;
 
-/**
+
+/*
  * Enum describing the type of node
  */
 typedef enum {
@@ -114,7 +116,8 @@ typedef enum {
   ARTNET_RAW      /**< Raw Node - used for diagnostics */
 } artnet_node_type;
 
-/**
+
+/*
  * Enum for the talk-to-me value
  * These values can be &'ed togeather, so for example to set private replies
  * and auto replying use :
@@ -146,18 +149,18 @@ typedef enum {
   ARTNET_FIRMWARE_REPLY_HANDLER,  /**< Called on reciept of an ArtFirmwareReply packet */
 } artnet_handler_name_t;
 
-/**
+
+/*
  * Describes a remote ArtNet node that has been discovered
- *
  */
 typedef struct artnet_node_entry_s {
-  uint8_t ip[4];          /**< The IP address, Network byte ordered*/
+  uint8_t ip[ARTNET_IP_SIZE];  /**< The IP address, Network byte ordered*/
   int16_t ver;          /**< The firmware version */
   int16_t sub;          /**< The subnet address */
   int16_t oem;          /**< The OEM value */
   uint8_t ubea;          /**< The UBEA version */
   uint8_t status;
-  uint8_t etsaman[2];        /**< The ESTA Manufacturer code */
+  uint8_t etsaman[ARTNET_ESTA_SIZE];        /**< The ESTA Manufacturer code */
   uint8_t shortname[ARTNET_SHORT_NAME_LENGTH];  /**< The short node name */
   uint8_t longname[ARTNET_LONG_NAME_LENGTH];  /**< The long node name */
   uint8_t nodereport[ARTNET_REPORT_LENGTH];  /**< The node report */
@@ -186,7 +189,6 @@ typedef struct {
 } artnet_node_config_t;
 
 
-
 /** The local ArtNet node */
 typedef void *artnet_node;
 
@@ -206,13 +208,13 @@ extern int artnet_destroy(artnet_node n);
 int artnet_join(artnet_node vn1, artnet_node vn2);
 
 // handler functions
-// these need to be clean up to a generic interface
+// these need to be cleaned up into a generic interface
 extern int artnet_set_handler(artnet_node vn,
   artnet_handler_name_t handler,
-  int (*fh)(artnet_node n, void *pp, void * d),
+  int (*fh)(artnet_node n, void *pp, void *d),
   void* data);
 extern int artnet_set_dmx_handler(artnet_node vn,
-  int (*fh)(artnet_node n,int port, void *d),
+  int (*fh)(artnet_node n, int port, void *d),
   void *data);
 extern int artnet_set_program_handler(artnet_node vn,
   int (*fh)(artnet_node n, void *d),
@@ -296,17 +298,17 @@ extern int artnet_set_long_name(artnet_node n, const char *name);
 
 //port manipulation functions
 extern int artnet_set_port_type(artnet_node n,
-  int id,
-  artnet_port_settings_t settings,
-  artnet_port_data_code data);
+                                int id,
+                                artnet_port_settings_t settings,
+                                artnet_port_data_code data);
 extern int artnet_set_port_addr(artnet_node n,
-  int id,
-  artnet_port_dir_t dir,
-  uint8_t addr);
-extern int artnet_get_universe_addr(artnet_node n,
-  int id,
-  artnet_port_dir_t dir);
+                                int id,
+                                artnet_port_dir_t dir,
+                                uint8_t addr);
 extern int artnet_set_subnet_addr(artnet_node n, uint8_t subnet);
+extern int artnet_get_universe_addr(artnet_node n,
+                                    int id,
+                                    artnet_port_dir_t dir);
 
 //node list functions
 extern artnet_node_list artnet_get_nl(artnet_node n);
