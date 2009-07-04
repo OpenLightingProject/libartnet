@@ -18,25 +18,26 @@
  * Copyright (C) 2004-2007 Simon Newton
  */
 
-
 #include "private.h"
 
 uint8_t _make_addr(uint8_t subnet, uint8_t addr);
 void check_merge_timeouts(node n, int port);
 void merge(node n, int port, int length, uint8_t *latest);
 
-/** checks if the callback is defined, if so call it passing the packet and
+/*
+ * Checks if the callback is defined, if so call it passing the packet and
  * the user supplied data.
  * If the callbacks return a non-zero result, further processing is canceled.
  */
 int check_callback(node n, artnet_packet p, callback_t callback) {
   if (callback.fh != NULL)
-    return callback.fh(n,p, callback.data);
+    return callback.fh(n, p, callback.data);
 
   return 0;
 }
 
-/**
+
+/*
  * Handle an artpoll packet
  */
 int handle_poll(node n, artnet_packet p) {
@@ -65,7 +66,7 @@ int handle_poll(node n, artnet_packet p) {
   return ARTNET_EOK;
 }
 
-/**
+/*
  * handle an art poll reply
  */
 void handle_reply(node n, artnet_packet p) {
@@ -75,13 +76,11 @@ void handle_reply(node n, artnet_packet p) {
   // run callback if defined
   if (check_callback(n, p, n->callbacks.reply))
     return;
-
 }
 
-/**
+
+/*
  * handle a art dmx packet
- *
- *
  */
 void handle_dmx(node n, artnet_packet p) {
   int i, data_length;
@@ -92,14 +91,15 @@ void handle_dmx(node n, artnet_packet p) {
   if (check_callback(n, p, n->callbacks.dmx))
     return;
 
-  data_length = (int) bytes_to_short(p->data.admx.lengthHi, p->data.admx.length);
+  data_length = (int) bytes_to_short(p->data.admx.lengthHi,
+                                     p->data.admx.length);
   data_length = min(data_length, ARTNET_DMX_LENGTH);
 
   // find matching output ports
   for (i = 0; i < ARTNET_MAX_PORTS; i++) {
     // if the addr matches and this port is enabled
     if (p->data.admx.universe == n->ports.out[i].port_addr &&
-      n->ports.out[i].port_enabled == TRUE ) {
+        n->ports.out[i].port_enabled) {
 
       port = &n->ports.out[i];
       ipA = port->ipA.s_addr;
@@ -290,7 +290,7 @@ int handle_address(node n, artnet_packet p) {
   }
 
   // program swins
-  for ( i =0; i < ARTNET_MAX_PORTS; i++) {
+  for (i =0; i < ARTNET_MAX_PORTS; i++) {
     if (p->data.addr.swin[i] == PROGRAM_NO_CHANGE)  {
       continue;
     } else if (p->data.addr.swin[i] == PROGRAM_DEFAULTS) {
@@ -377,13 +377,12 @@ int handle_address(node n, artnet_packet p) {
     return ret;
 
   return artnet_tx_poll_reply(n, TRUE);
-
 }
 
-/**
+
+/*
  * handle art input.
  * ArtInput packets can disable input ports.
- *
  */
 int _artnet_handle_input(node n, artnet_packet p) {
   int i, ports, ret;
@@ -423,7 +422,7 @@ int handle_tod_request(node n, artnet_packet p) {
   if (check_callback(n, p, n->callbacks.todrequest))
     return ARTNET_EOK;
 
-  if (n->state.node_type != ARTNET_NODE )
+  if (n->state.node_type != ARTNET_NODE)
     return ARTNET_EOK;
 
   // limit to 32
@@ -434,7 +433,7 @@ int handle_tod_request(node n, artnet_packet p) {
     for (i=0; i < limit; i++) {
       for (j=0; j < ARTNET_MAX_PORTS; j++) {
         if (n->ports.out[j].port_addr == p->data.todreq.address[i] &&
-            n->ports.out[j].port_enabled == TRUE) {
+            n->ports.out[j].port_enabled) {
           // reply with tod
           ret = ret || artnet_tx_tod_data(n, j);
         }
@@ -476,7 +475,7 @@ int handle_tod_control(node n, artnet_packet p) {
 
   for (i=0; i < ARTNET_MAX_PORTS; i++) {
     if (n->ports.out[i].port_addr == p->data.todcontrol.address &&
-        n->ports.out[i].port_enabled == TRUE ) {
+        n->ports.out[i].port_enabled) {
 
       if (p->data.todcontrol.cmd == ARTNET_TOD_FLUSH) {
         // flush tod for this port
@@ -580,8 +579,11 @@ int handle_firmware(node n, artnet_packet p) {
 
         // do the callback here
         if (n->callbacks.firmware_c.fh != NULL)
-          n->callbacks.firmware_c.fh(n, n->firmware.ubea, n->firmware.data,
-            n->firmware.bytes_total, n->callbacks.firmware_c.data);
+          n->callbacks.firmware_c.fh(n,
+                                     n->firmware.ubea,
+                                     n->firmware.data,
+                                     n->firmware.bytes_total,
+                                     n->callbacks.firmware_c.data);
 
       } else {
         response_code = ARTNET_FIRMWARE_BLOCKGOOD;
@@ -598,7 +600,7 @@ int handle_firmware(node n, artnet_packet p) {
   } else if (p->data.firmware.type == ARTNET_FIRMWARE_FIRMCONT ||
              p->data.firmware.type == ARTNET_FIRMWARE_UBEACONT) {
     // continued transfer
-    length = artnet_misc_nbytes_to_32( p->data.firmware.length ) *
+    length = artnet_misc_nbytes_to_32(p->data.firmware.length) *
       sizeof(p->data.firmware.data[0]);
     total_blocks = length / ARTNET_FIRMWARE_SIZE / 2 + 1;
     block_length = ARTNET_FIRMWARE_SIZE * sizeof(uint16_t);
@@ -631,7 +633,7 @@ int handle_firmware(node n, artnet_packet p) {
 
   } else if (p->data.firmware.type == ARTNET_FIRMWARE_FIRMLAST ||
              p->data.firmware.type == ARTNET_FIRMWARE_UBEALAST) {
-    length = artnet_misc_nbytes_to_32( p->data.firmware.length ) *
+    length = artnet_misc_nbytes_to_32( p->data.firmware.length) *
       sizeof(p->data.firmware.data[0]);
     total_blocks = length / ARTNET_FIRMWARE_SIZE / 2 + 1;
 
@@ -648,13 +650,11 @@ int handle_firmware(node n, artnet_packet p) {
     }
     offset = block_id * ARTNET_FIRMWARE_SIZE;
 
-
     if (n->firmware.peer.s_addr == p->from.s_addr &&
         length == n->firmware.bytes_total &&
         block_id == total_blocks-1) {
 
       // all the checks work out
-
       memcpy(n->firmware.data + offset, p->data.firmware.data, block_length);
       n->firmware.bytes_current += block_length;
 
@@ -675,11 +675,11 @@ int handle_firmware(node n, artnet_packet p) {
       // in a transfer not from this ip
       printf("last, ips don't match\n" );
       response_code = ARTNET_FIRMWARE_FAIL;
-    } else if ( length != n->firmware.bytes_total  ) {
+    } else if (length != n->firmware.bytes_total) {
       // they changed the length mid way thru a transfer
       printf("last, lengths have changed %d %d\n", length, n->firmware.bytes_total);
       response_code = ARTNET_FIRMWARE_FAIL;
-    } else if ( block_id != total_blocks -1) {
+    } else if (block_id != total_blocks -1) {
       // the blocks don't match up
       printf("This is the last block, but not according to the lengths %d %d\n", block_id, total_blocks -1);
       response_code = ARTNET_FIRMWARE_FAIL;
@@ -741,9 +741,8 @@ int handle_firmware_reply(node n, artnet_packet p) {
 }
 
 
-/**
+/*
  * have to sort this one out.
- *
  */
 void handle_ipprog(node n, artnet_packet p) {
 
@@ -753,10 +752,10 @@ void handle_ipprog(node n, artnet_packet p) {
   printf("in ipprog\n");
 }
 
-/**
- * the main handler for an artnet packet. calls
+
+/*
+ * The main handler for an artnet packet. calls
  * the appropriate handler function
- *
  */
 int handle(node n, artnet_packet p) {
 
@@ -842,7 +841,7 @@ int16_t get_type(artnet_packet p) {
 
   if (p->length < 10)
     return 0;
-  if (! memcmp( &p->data, "Art-Net\0", 8)) {
+  if (!memcmp(&p->data, "Art-Net\0", 8)) {
     // not the best here, this needs to be tested on different arch
     data = (uint8_t *) &p->data;
 
@@ -854,8 +853,7 @@ int16_t get_type(artnet_packet p) {
 }
 
 
-
-/**
+/*
  * takes a subnet and an address and creates the universe address
  */
 uint8_t _make_addr(uint8_t subnet, uint8_t addr) {
@@ -863,9 +861,7 @@ uint8_t _make_addr(uint8_t subnet, uint8_t addr) {
 }
 
 
-/**
- *
- *
+/*
  *
  */
 void check_merge_timeouts(node n, int port_id) {
@@ -888,9 +884,9 @@ void check_merge_timeouts(node n, int port_id) {
   }
 }
 
-/**
+
+/*
  * merge the data from two sources
- *
  */
 void merge(node n, int port_id, int length, uint8_t *latest) {
   int i;
@@ -901,8 +897,7 @@ void merge(node n, int port_id, int length, uint8_t *latest) {
     for (i=0; i< length; i++)
       port->data[i] = max(port->dataA[i], port->dataB[i]);
   } else {
-    // LTP is latest takes precendece (not least!)
-    memcpy(port->data, latest, length );
+    memcpy(port->data, latest, length);
   }
 }
 
@@ -913,5 +908,5 @@ void reset_firmware_upload(node n) {
   n->firmware.peer.s_addr = 0;
   n->firmware.ubea = 0;
   n->firmware.last_time = 0;
-  free(n->firmware.data );
+  free(n->firmware.data);
 }
