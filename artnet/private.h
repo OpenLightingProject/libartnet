@@ -480,5 +480,6 @@ int artnet_net_start(node n);
 int artnet_net_close(node n);
 int artnet_net_join(node n1, node n2);
 int artnet_net_set_fdset(node n, fd_set *fdset);
+int artnet_net_inet_aton(const char *ip_address, struct in_addr *address);
 
 #endif

@@ -16,7 +16,9 @@ AC_PROG_LIBTOOL
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([endian.h ppc/endian.h arpa/inet.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h unistd.hi linux/if_packet.h])
+AC_CHECK_HEADERS([endian.h ppc/endian.h arpa/inet.h netinet/in.h stddef.h \
+                  stdint.h stdlib.h string.h sys/ioctl.h sys/socket.h \
+                  unistd.hi linux/if_packet.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -31,8 +33,8 @@ AC_FUNC_MEMCMP
 AC_FUNC_REALLOC
 AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([inet_ntoa memset select socket strchr strdup strerror])
-AC_CHECK_FUNCS(getifaddrs)
+AC_CHECK_FUNCS([inet_ntoa inet_aton memset select socket strchr strdup \
+                strerror getifaddrs])
 
 # check for ipv6 support - taken from unp
 AC_MSG_CHECKING(for IPv6 support)

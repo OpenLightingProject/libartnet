@@ -344,7 +344,7 @@ e_return:
  * Scan for interfaces, and work out which one the user wanted to use.
  *
  */
-int artnet_net_init(node n, const char *ip) {
+int artnet_net_init(node n, const char *preferred_ip) {
   iface_t *ift, *ift_head = NULL;
   struct in_addr wanted_ip;
 
@@ -357,7 +357,7 @@ int artnet_net_init(node n, const char *ip) {
 
   if (n->state.verbose) {
     printf("#### INTERFACES FOUND ####\n");
-    for (ift = ift_head;ift != NULL; ift = ift->next) {
+    for (ift = ift_head; ift != NULL; ift = ift->next) {
       printf("IP: %s\n", inet_ntoa(ift->ip_addr.sin_addr));
       printf("  bcast: %s\n" , inet_ntoa(ift->bcast_addr.sin_addr));
       printf("  hwaddr: ");
@@ -369,8 +369,28 @@ int artnet_net_init(node n, const char *ip) {
     printf("#########################\n");
   }
 
-  if (ip == NULL) {
-    if (ift_head != NULL) {
+  if (preferred_ip) {
+    // search through list of interfaces for one with the correct address
+    ret = artnet_net_inet_aton(preferred_ip, &wanted_ip);
+    if (ret)
+      goto e_cleanup;
+
+    for (ift = ift_head; ift != NULL; ift = ift->next) {
+      if (ift->ip_addr.sin_addr.s_addr == wanted_ip.s_addr) {
+        found = TRUE;
+        n->state.ip_addr = ift->ip_addr.sin_addr;
+        n->state.bcast_addr = ift->bcast_addr.sin_addr;
+        memcpy(&n->state.hw_addr, &ift->hw_addr, ARTNET_MAC_SIZE);
+        break;
+      }
+    }
+    if (!found) {
+      artnet_error("Cannot find ip %s", preferred_ip);
+      ret = ARTNET_ENET;
+      goto e_cleanup;
+    }
+  } else {
+    if (ift_head) {
       // pick first address
       // copy ip address, bcast address and hardware address
       n->state.ip_addr = ift_head->ip_addr.sin_addr;
@@ -379,27 +399,6 @@ int artnet_net_init(node n, const char *ip) {
     } else {
       artnet_error("No interfaces found!");
       ret = ARTNET_ENET;
-      goto e_cleanup;
-    }
-  } else {
-    // search through list of interfaces for one with the correct address
-    if (inet_aton(ip, &wanted_ip) == 0) {
-      artnet_error("Cannot convert address %s", ip);
-      ret = ARTNET_ENET;
-      goto e_cleanup;
-    }
-    for (ift = ift_head; ift != NULL; ift = ift->next) {
-      if ( ift->ip_addr.sin_addr.s_addr == wanted_ip.s_addr) {
-        found = TRUE;
-        n->state.ip_addr = ift->ip_addr.sin_addr;
-        n->state.bcast_addr = ift->bcast_addr.sin_addr;
-        memcpy(&n->state.hw_addr, &ift->hw_addr, ARTNET_MAC_SIZE);
-      }
-    }
-    if (!found) {
-      artnet_error("Cannot find ip %s", ip);
-      ret = ARTNET_ENET;
-      goto e_cleanup;
     }
   }
 
@@ -606,3 +605,20 @@ int artnet_net_close(node n) {
   }
   return ARTNET_EOK;
 }
+
+
+/*
+ * Convert a string to an in_addr
+ */
+int artnet_net_inet_aton(const char *ip_address, struct in_addr *address) {
+#ifdef HAVE_INET_ATON
+  if (!inet_aton(ip_address, address)) {
+#else
+  if ((*address = inet_addr(ip_address)) == INADDR_NONE) {
+#endif
+    artnet_error("IP conversion from %s failed", ip_address);
+    return ARTNET_EARG;
+  }
+  return ARTNET_EOK;
+}
+

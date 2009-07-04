@@ -24,26 +24,26 @@
  * Send an art poll
  *
  * @param ip the ip address to send to
- * @param ttm the talk to me value, eitherARTNET_TTM_DEFAULT, ARTNET_TTM_PRIVATE or ARTNET_TTM_AUTO
+ * @param ttm the talk to me value, either ARTNET_TTM_DEFAULT,
+ *   ARTNET_TTM_PRIVATE or ARTNET_TTM_AUTO
  */
 int artnet_tx_poll(node n, const char *ip, artnet_ttm_value_t ttm) {
   artnet_packet_t p;
+  int ret;
 
   if (n->state.mode != ARTNET_ON)
     return ARTNET_EACTION;
 
   if (n->state.node_type == ARTNET_SRV || n->state.node_type == ARTNET_RAW) {
-    // check if caller specified an ip or wanted bcase
-    if (ip != NULL) {
-      if (!inet_aton(ip, &p.to)) {
-        artnet_error("Ip conversion from %s failed", ip);
-        return ARTNET_EARG;
-      }
+    if (ip) {
+      ret = artnet_net_inet_aton(ip, &p.to);
+      if (ret)
+        return ret;
     } else {
       p.to.s_addr = n->state.bcast_addr.s_addr;
     }
 
-    memcpy( &p.data.ap.id, ARTNET_STRING, ARTNET_STRING_SIZE);
+    memcpy(&p.data.ap.id, ARTNET_STRING, ARTNET_STRING_SIZE);
     p.data.ap.opCode = htols(ARTNET_POLL);
     p.data.ap.verH = 0;
     p.data.ap.ver = ARTNET_VERSION;
