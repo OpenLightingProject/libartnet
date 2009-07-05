@@ -63,7 +63,7 @@ uint16_t HIGH_BYTE = 0xFF00;
 void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply);
 int find_nodes_from_uni(node_list_t *nl, uint8_t uni, SI *ips, int size);
 
-/**
+/*
  * Creates a new ArtNet node.
  * Takes a string containing the ip address to bind to, if the string is NULL
  * it uses the first non loopback address
@@ -80,7 +80,7 @@ artnet_node artnet_new(const char *ip, int verbose) {
 
   if (!n) {
     artnet_error("malloc failure");
-    goto e_exit;
+    return NULL;
   }
 
   memset(n, 0x0, sizeof(artnet_node_t));
@@ -103,7 +103,8 @@ artnet_node artnet_new(const char *ip, int verbose) {
   n->sd = -1;
 
   if (artnet_net_init(n, ip)) {
-    goto e_free;
+    free(n);
+    return NULL;
   }
 
   // now setup the default parameters
@@ -124,19 +125,12 @@ artnet_node artnet_new(const char *ip, int verbose) {
     reset_tod(&n->ports.out[i].port_tod);
   }
   return n;
-
-e_free:
-  free(n);
-  n = NULL;
-e_exit :
-  return n;
 }
 
 
-/**
+/*
  * Starts the ArtNet node.
- * Binds to the network sockets and sends an ArtPoll
- *
+ * Binds the network socket and sends an ArtPoll
  * @param vn the artnet_node
  * @return 0 on success, non 0 on failure
  *
@@ -144,14 +138,13 @@ e_exit :
 int artnet_start(artnet_node vn) {
   node n = (node) vn;
   int ret;
-
   check_nullnode(vn);
 
   if (n->state.mode != ARTNET_STANDBY)
     return ARTNET_ESTATE;
 
   if ((ret = artnet_net_start(n)))
-    goto e_exit;
+    return ret;
 
   n->state.mode = ARTNET_ON;
 
@@ -161,27 +154,25 @@ int artnet_start(artnet_node vn) {
 
   // build the initial reply
   if ((ret = artnet_tx_build_art_poll_reply(n)))
-    goto e_exit;
+    return ret;
 
   if (n->state.node_type == ARTNET_SRV) {
     // poll the network
     if ((ret = artnet_tx_poll(n,NULL, ARTNET_TTM_AUTO)))
-      goto e_exit;
+      return ret;
 
     if ((ret = artnet_tx_tod_request(n)))
-      goto e_exit;
+      return ret;
   } else {
-
     // send a reply on startup
     if ((ret = artnet_tx_poll_reply(n, FALSE)))
-      goto e_exit;
+      return ret;
   }
-
-e_exit:
   return ret;
 }
 
-/**
+
+/*
  * Stops the ArtNet node
  * Closes the network sockets held by the node
  *
@@ -236,9 +227,7 @@ int artnet_destroy(artnet_node vn) {
 
 /*
  * Set the OEM code
- *
- * this can only be done in the standby state
- *
+ * This can only be done in the standby state
  */
 int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo) {
   node n = (node) vn;
@@ -249,16 +238,13 @@ int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo) {
 
   n->state.oem_hi = hi;
   n->state.oem_lo = lo;
-
   return ARTNET_EOK;
 }
 
 
 /*
  * Set the ESTA code
- *
- * this can only be done in the standby state
- *
+ * This can only be done in the standby state
  */
 int artnet_setesta(artnet_node vn, char hi, char lo) {
   node n = (node) vn;
@@ -269,7 +255,6 @@ int artnet_setesta(artnet_node vn, char hi, char lo) {
 
   n->state.esta_hi = hi;
   n->state.esta_lo = lo;
-
   return ARTNET_EOK;
 }
 
@@ -292,7 +277,7 @@ int artnet_set_bcast_limit(artnet_node vn, int limit) {
   return ARTNET_EOK;
 }
 
-/**
+/*
  * Handle any received packets.
  * This function is the workhorse of libartnet. You have a couple of options:
  *   - use artnet_get_sd() to retrieve the socket descriptors and select to
@@ -316,7 +301,7 @@ int artnet_read(artnet_node vn, int timeout) {
   if (n->state.mode != ARTNET_ON)
     return ARTNET_EACTION;
 
-  while(1) {
+  while (1) {
     memset(&p.data, 0x0, sizeof(p.data));
 
     // check timeouts now, else this packet may update the timestamps
@@ -336,9 +321,9 @@ int artnet_read(artnet_node vn, int timeout) {
     for (tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer)
       check_timeouts(tmp);
 
-    if ( p.length > MIN_PACKET_SIZE && get_type(&p)) {
+    if (p.length > MIN_PACKET_SIZE && get_type(&p)) {
       handle(n, &p);
-      for ( tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer )  {
+      for (tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer) {
         handle(tmp, &p);
       }
     }
@@ -454,7 +439,6 @@ int artnet_set_handler(artnet_node vn,
   }
   callback->fh = fh;
   callback->data = data;
-
   return ARTNET_EOK;
 }
 
@@ -670,12 +654,17 @@ int artnet_send_dmx(artnet_node vn,
   } else {
     // find the number of ports for this uni
     SI *ips = malloc(sizeof(SI) * n->state.bcast_limit);
-    int nodes = find_nodes_from_uni(&n->node_list, port->port_addr, ips, n->state.bcast_limit);
+    int nodes = find_nodes_from_uni(&n->node_list,
+                                    port->port_addr,
+                                    ips,
+                                    n->state.bcast_limit);
 
     if (nodes > n->state.bcast_limit) {
-      // bcast
-      if ((ret = artnet_net_send(n, &p)))
+      // fall back to broadcast
+      free(ips);
+      if ((ret = artnet_net_send(n, &p))) {
         return ret;
+      }
     } else {
       // unicast to the specified nodes
       int i;
@@ -683,9 +672,9 @@ int artnet_send_dmx(artnet_node vn,
         p.to = ips[i];
         artnet_net_send(n, &p);
       }
+      free(ips);
     }
   }
-
   port->seq++;
   return ARTNET_EOK;
 }
@@ -753,7 +742,7 @@ int artnet_send_address(artnet_node vn,
 
   check_nullnode(vn);
 
-  if ( e == NULL || ent == NULL)
+  if (e == NULL || ent == NULL)
     return ARTNET_EARG;
 
   if (n->state.mode != ARTNET_ON)
@@ -788,8 +777,7 @@ int artnet_send_address(artnet_node vn,
 }
 
 
-/**
- *
+/*
  * Sends an ArtInput packet to the specified node, this packet is used to
  * enable/disable the input ports on the remote node.
  *
@@ -838,17 +826,7 @@ int artnet_send_input(artnet_node vn,
 }
 
 
-// need address here
-/*int artnet_send_ipprog_reply(artnet_node vn) {
-  node n = (node) vn;
-  artnet_packet_t ipr;
-
-  net_send(n, &reply);
-  return 0;
-}*/
-
-
-/**
+/*
  *
  * Sends a series of ArtFirmwareMaster packets to the specified node, these are used to
  * upload firmware to the remote node.
@@ -889,7 +867,7 @@ int artnet_send_firmware(
     blen = length * sizeof(uint16_t);
 
     // store the parameters for this transfer
-    ent->firmware.data = malloc( blen);
+    ent->firmware.data = malloc(blen);
 
     if ( ent->firmware.data == NULL) {
       artnet_error_malloc();
@@ -999,7 +977,6 @@ int artnet_send_tod_data(artnet_node vn, int port) {
 
 /*
  * Send a rdm datagram
- *
  * @param address the universe address to send to
  * @param data the rdm data to send
  * @param length the length of the rdm data
@@ -1017,8 +994,7 @@ int artnet_send_rdm(artnet_node vn,
 
 
 /*
- * add a rdm device to our tod.
- *
+ * Add a rdm device to our tod.
  * @param port the port the device is connected to
  * @param the uid of the device
  */
@@ -1036,7 +1012,7 @@ int artnet_add_rdm_device(artnet_node vn,
   // add uid to tod for this port
   add_tod_uid(&n->ports.out[port].port_tod, uid);
 
-  // notify everyone  our tod changed
+  // notify everyone our tod changed
   return artnet_tx_tod_data(n, port);
 }
 
@@ -1095,13 +1071,11 @@ int artnet_remove_rdm_device(artnet_node vn,
 
   // notify everyone our tod changed
   return artnet_tx_tod_data(n, port);
-
 }
 
 
 /*
  * Reads the latest dmx data
- *
  * @param vn the artnet node
  * @param port_id the port to read data from
  * @param length
@@ -1161,7 +1135,7 @@ int artnet_set_subnet_addr(artnet_node vn, uint8_t subnet) {
   n->state.default_subnet = subnet;
 
   // if not under network control, and the subnet is different from the current one
-  if ( ! n->state.subnet_net_ctl && subnet != n->state.subnet) {
+  if (!n->state.subnet_net_ctl && subnet != n->state.subnet) {
     n->state.subnet = subnet;
 
     // redo the addresses for each port
@@ -1298,7 +1272,7 @@ int artnet_set_port_addr(artnet_node vn,
     port = &n->ports.in[id].port;
     changed = n->ports.in[id].port_enabled?0:1;
     n->ports.in[id].port_enabled = TRUE;
-  } else if ( dir == ARTNET_OUTPUT_PORT) {
+  } else if (dir == ARTNET_OUTPUT_PORT) {
     port = &n->ports.out[id].port;
     changed = n->ports.out[id].port_enabled?0:1;
     n->ports.out[id].port_enabled = TRUE;
@@ -1310,7 +1284,8 @@ int artnet_set_port_addr(artnet_node vn,
   port->default_addr = addr;
 
   // if not under network control and address is changing
-  if (!port->net_ctl && (changed || (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE)) ) {
+  if (!port->net_ctl &&
+      (changed || (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE))) {
     port->addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
 
     // reset seq if input port
@@ -1412,7 +1387,7 @@ int artnet_get_sd(artnet_node vn) {
   node n = (node) vn;
   check_nullnode(vn);
 
-  if ( n->state.mode != ARTNET_ON)
+  if (n->state.mode != ARTNET_ON)
     return ARTNET_EACTION;
 
   return n->sd;
