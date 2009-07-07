@@ -22,9 +22,12 @@
 #  include <config.h>
 #endif
 
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
+
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
@@ -72,8 +75,11 @@ extern uint8_t MERGE_TIMEOUT_SECONDS;
 extern uint8_t FIRMWARE_TIMEOUT_SECONDS;
 extern uint8_t RECV_NO_DATA;
 
+#ifndef TRUE
 extern int TRUE;
 extern int FALSE;
+#endif
+
 extern uint16_t LOW_BYTE;
 extern uint16_t HIGH_BYTE;
 

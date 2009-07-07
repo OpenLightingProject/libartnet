@@ -24,7 +24,13 @@
 #include <stdint.h>
 // order is important here for osx
 #include <sys/types.h>
+
+#ifndef WIN32
 #include <sys/select.h>
+#else
+#include <Winsock2.h>
+typedef unsigned long in_addr_t;
+#endif
 
 #include <artnet/common.h>
 

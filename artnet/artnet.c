@@ -55,8 +55,11 @@ uint8_t FIRMWARE_TIMEOUT_SECONDS = 20;
 uint8_t RECV_NO_DATA = 1;
 uint8_t MAX_NODE_BCAST_LIMIT = 30; // always bcast after this point
 
+#ifndef TRUE
 int TRUE = 1;
 int FALSE = 0;
+#endif
+
 uint16_t LOW_BYTE = 0x00FF;
 uint16_t HIGH_BYTE = 0xFF00;
 

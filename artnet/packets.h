@@ -24,7 +24,10 @@
 
 #include <sys/types.h>
 #include <stdint.h>
+
+#ifndef WIN32
 #include <netinet/in.h>
+#endif
 
 #include <artnet/common.h>
 
