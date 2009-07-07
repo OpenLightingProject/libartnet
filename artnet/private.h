@@ -95,6 +95,10 @@ extern uint16_t HIGH_BYTE;
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
+
 // byte ordering macros
 #define bswap_16(x)  ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
@@ -488,9 +492,10 @@ int artnet_net_send(node n, artnet_packet p);
 int artnet_net_set_non_block(node n);
 int artnet_net_init(node n, const char *ip);
 int artnet_net_start(node n);
-int artnet_net_close(node n);
+int artnet_net_close(int sock);
 int artnet_net_join(node n1, node n2);
 int artnet_net_set_fdset(node n, fd_set *fdset);
 int artnet_net_inet_aton(const char *ip_address, struct in_addr *address);
+const char *artnet_net_last_error();
 
 #endif

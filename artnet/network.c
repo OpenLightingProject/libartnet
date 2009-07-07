@@ -72,6 +72,12 @@ static void free_ifaces(iface_t *head) {
   }
 }
 
+#ifdef WIN32
+
+
+
+# else // not WIN32
+
 #ifdef USE_GETIFADDRS
 
 /*
@@ -172,7 +178,7 @@ static int get_ifaces(iface_t **ift_head_r) {
   return 0;
 }
 
-#else
+#else // no GETIFADDRS
 
 /*
  *
@@ -235,14 +241,11 @@ static int get_ifaces(iface_t **ift_head_r) {
 
   // loop through each iface
   for (ptr = buf; ptr < buf + ifc.ifc_len;) {
-
     ifr = (struct ifreq*) ptr;
 
     // work out length here
 #ifdef HAVE_SOCKADDR_SA_LEN
-
     len = max(sizeof(struct sockaddr), ifr->ifr_addr.sa_len);
-
 #else
     switch (ifr->ifr_addr.sa_family) {
 #ifdef  IPV6
@@ -341,7 +344,8 @@ e_return:
   return ret;
 }
 
-#endif
+#endif // GETIFADDRS
+#endif // not WIN32
 
 
 /*
@@ -418,21 +422,29 @@ e_return :
  *
  */
 int artnet_net_start(node n) {
+  int sock;
   struct sockaddr_in servAddr;
-  int bcast_flag = TRUE;
+  int true_flag = TRUE;
   node tmp;
-  int ret = ARTNET_EOK;
 
-  // only attempt to bind to the broadcast if we are the group master
+  // only attempt to bind if we are the group master
   if (n->peering.master == TRUE) {
 
-    /* create socket */
-    n->sd = socket(PF_INET, SOCK_DGRAM, 0);
+#ifdef WIN32
+    // check winsock version
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData); != 0)
+      return (-1);
+    if (wsaData.wVersion != wVersionRequested)
+      return (-2);
+#endif
 
-    if (n->sd < 0) {
-      artnet_error("Could not create socket %s", strerror(errno));
-      ret = ARTNET_ENET;
-      goto e_socket1;
+    // create socket
+    sock = socket(PF_INET, SOCK_DGRAM, 0);
+
+    if (sock < 0) {
+      artnet_error("Could not create socket %s", artnet_net_last_error());
+      return ARTNET_ENET;
     }
 
     memset(&servAddr, 0x00, sizeof(servAddr));
@@ -441,47 +453,59 @@ int artnet_net_start(node n) {
     servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (n->state.verbose)
-      printf("Binding to %s \n" , inet_ntoa(servAddr.sin_addr));
+      printf("Binding to %s \n", inet_ntoa(servAddr.sin_addr));
 
-    /* bind sockets
-     * we do one for the ip address and one for the broadcast address
-     */
-    if (bind(n->sd, (SA *) &servAddr, sizeof(servAddr)) == -1) {
-      artnet_error("Failed to bind to socket %s", strerror(errno));
-      ret = ARTNET_ENET;
-      goto e_bind1;
+    // bind sockets
+    if (bind(sock, (SA *) &servAddr, sizeof(servAddr)) == -1) {
+      artnet_error("Failed to bind to socket %s", artnet_net_last_error());
+      artnet_net_close(sock);
+      return ARTNET_ENET;
     }
 
     // allow bcasting
-    if (setsockopt(n->sd,
+    if (setsockopt(sock,
                    SOL_SOCKET,
                    SO_BROADCAST,
-                   (char*) &bcast_flag, // char* for win32
+                   (char*) &true_flag, // char* for win32
                    sizeof(int)) == -1) {
-      artnet_error("Failed to bind to socket %s", strerror(errno));
-      ret =  ARTNET_ENET;
-      goto e_setsockopt;
+      artnet_error("Failed to bind to socket %s", artnet_net_last_error());
+      artnet_net_close(sock);
+      return ARTNET_ENET;
     }
 
-    // now we need to propagate the sd to all our peers
-    for (tmp = n->peering.peer; tmp != NULL && tmp != n;
-         tmp = tmp->peering.peer)
-      tmp->sd = n->sd;
+#ifdef WIN32
+    // ### LH - 22.08.2008
+    // make it possible to reuse port, if SO_REUSEADDR
+    // exists on operating system
+
+    // NEVER USE SO_EXCLUSIVEADDRUSE, as that freezes the application
+    // on WinXP, if port is in use !
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &true_flag,
+        sizeof(true_flag)) < 0) {
+
+        artnet_error("Set reuse failed", artnet_net_last_error());
+        artnet_net_close(sock);
+        return ARTNET_ENET;
+    }
+
+    if (SOCKET_ERROR == ioctlsocket(n->sd, FIONBIO, &true_flag)) {
+        artnet_error("ioctlsocket", artnet_net_last_error());
+        artnet_net_close(sock);
+        return ARTNET_ENET;
+    }
+#endif
+
+    n->sd = sock;
+    // Propagate the socket to all our peers
+    for (tmp = n->peering.peer; tmp && tmp != n; tmp = tmp->peering.peer)
+      tmp->sd = sock;
   }
-
   return ARTNET_EOK;
-
-e_setsockopt:
-e_bind1:
-  close(n->sd);
-
-e_socket1:
-  return ret;
 }
 
 
 /*
- * Recv a packet from the network
+ * Receive a packet.
  */
 int artnet_net_recv(node n, artnet_packet p, int delay) {
   ssize_t len;
@@ -505,7 +529,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
       break;
     case -1:
       if ( errno != EINTR) {
-        artnet_error("%s : select error", __FUNCTION__);
+        artnet_error("Select error %s", artnet_net_last_error());
         return ARTNET_ENET;
       }
       return ARTNET_EOK;
@@ -524,7 +548,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
                  (SA*) &cliAddr,
                  &cliLen);
   if (len < 0) {
-    artnet_error("%s : recvfrom error %s", __FUNCTION__, strerror(errno));
+    artnet_error("Recvfrom error %s", artnet_net_last_error());
     return ARTNET_ENET;
   }
 
@@ -569,7 +593,7 @@ int artnet_net_send(node n, artnet_packet p) {
                (SA*) &addr,
                sizeof(addr));
   if (ret == -1) {
-    artnet_error("Sendto failed: %s", strerror(errno));
+    artnet_error("Sendto failed: %s", artnet_net_last_error());
     n->state.report_code = ARTNET_RCUDPFAIL;
     return ARTNET_ENET;
 
@@ -579,7 +603,7 @@ int artnet_net_send(node n, artnet_packet p) {
     return ARTNET_ENET;
   }
 
-  if (n->callbacks.send.fh != NULL) {
+  if (n->callbacks.send.fh) {
     get_type(p);
     n->callbacks.send.fh(n, p, n->callbacks.send.data);
   }
@@ -615,12 +639,22 @@ int artnet_net_set_fdset (node n, fd_set *fdset) {
 }
 
 
-int artnet_net_close(node n) {
-  if (close(n->sd)) {
-    artnet_error(strerror(errno));
+/*
+ * Close a socket
+ */
+int artnet_net_close(int sock) {
+#ifdef WIN32
+  shutdown(sock, SD_BOTH);
+  closesocket(sock);
+  WSACancelBlockingCall();
+  WSACleanup();
+#else
+  if (close(sock)) {
+    artnet_error(artnet_net_last_error());
     return ARTNET_ENET;
   }
   return ARTNET_EOK;
+#endif
 }
 
 
@@ -638,5 +672,20 @@ int artnet_net_inet_aton(const char *ip_address, struct in_addr *address) {
     return ARTNET_EARG;
   }
   return ARTNET_EOK;
+}
+
+
+/*
+ *
+ */
+const char *artnet_net_last_error() {
+#ifdef WIN32
+  static char[10] error_str;
+  int error = WSAGetLastError();
+  snprintf(error_str, sizeof(error_str) "%d", error);
+  return error_str;
+#else
+  return strerror(errno);
+#endif
 }
 

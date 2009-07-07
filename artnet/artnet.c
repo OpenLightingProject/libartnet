@@ -103,7 +103,7 @@ artnet_node artnet_new(const char *ip, int verbose) {
   n->peering.peer = NULL;
   n->peering.master = TRUE;
 
-  n->sd = -1;
+  n->sd = INVALID_SOCKET;
 
   if (artnet_net_init(n, ip)) {
     free(n);
@@ -176,32 +176,25 @@ int artnet_start(artnet_node vn) {
 
 
 /*
- * Stops the ArtNet node
- * Closes the network sockets held by the node
- *
+ * Stops the ArtNet node. This closes the network sockets held by the node
  * @param vn the artnet_node
- * @return 0 on success, -1 on failure
+ * @return 0 on success, non-0 on failure
  */
 int artnet_stop(artnet_node vn) {
   node n = (node) vn;
-  int ret;
-
   check_nullnode(vn);
 
   if (n->state.mode != ARTNET_ON)
     return ARTNET_EACTION;
 
-  if ((ret = artnet_net_close(n)))
-    return ret;
-
+  artnet_net_close(n->sd);
   n->state.mode = ARTNET_STANDBY;
   return ARTNET_EOK;
 }
 
-/**
+
+/*
  * Free the memory associated with this node
- *
- *
  */
 int artnet_destroy(artnet_node vn) {
   node n = (node) vn;
