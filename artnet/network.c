@@ -152,7 +152,7 @@ static int get_ifaces(iface_t **ift_head_r) {
 
     // Find corresponding iface_t -structure
     for (ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
-      if ((! ifa_iter->ifa_addr) || ifa_iter->ifa_addr->sa_family  != AF_PACKET)
+      if ((!ifa_iter->ifa_addr) || ifa_iter->ifa_addr->sa_family != AF_PACKET)
         continue;
 
       if (strncmp(if_name, ifa_iter->ifa_name, IFNAME_SIZE) == 0) {
@@ -451,14 +451,19 @@ int artnet_net_start(node n) {
     }
 
     // allow bcasting
-    if (setsockopt(n->sd, SOL_SOCKET, SO_BROADCAST, &bcast_flag, sizeof(int)) == -1) {
+    if (setsockopt(n->sd,
+                   SOL_SOCKET,
+                   SO_BROADCAST,
+                   (char*) &bcast_flag, // char* for win32
+                   sizeof(int)) == -1) {
       artnet_error("Failed to bind to socket %s", strerror(errno));
       ret =  ARTNET_ENET;
       goto e_setsockopt;
     }
 
     // now we need to propagate the sd to all our peers
-    for(tmp = n->peering.peer; tmp != NULL && tmp != n; tmp = tmp->peering.peer)
+    for (tmp = n->peering.peer; tmp != NULL && tmp != n;
+         tmp = tmp->peering.peer)
       tmp->sd = n->sd;
   }
 
@@ -475,8 +480,6 @@ e_socket1:
 
 /*
  * Recv a packet from the network
- *
- *
  */
 int artnet_net_recv(node n, artnet_packet p, int delay) {
   ssize_t len;
@@ -512,7 +515,12 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
   // need a check here for the amount of data read
   // should prob allow an extra byte after data, and pass the size as sizeof(Data) +1
   // then check the size read and if equal to size(data)+1 we have an error
-  len = recvfrom(n->sd, &(p->data), sizeof(p->data), 0, (SA*) &cliAddr, &cliLen);
+  len = recvfrom(n->sd,
+                 (char*) &(p->data), // char* for win32
+                 sizeof(p->data),
+                 0,
+                 (SA*) &cliAddr,
+                 &cliLen);
   if (len < 0) {
     artnet_error("%s : recvfrom error %s", __FUNCTION__, strerror(errno));
     return ARTNET_ENET;
@@ -552,7 +560,12 @@ int artnet_net_send(node n, artnet_packet p) {
   if (n->state.verbose)
     printf("sending to %s\n" , inet_ntoa(addr.sin_addr));
 
-  ret = sendto(n->sd, &p->data, p->length, 0, (SA*) &addr, sizeof(addr));
+  ret = sendto(n->sd,
+               (char*) &p->data, // char* required for win32
+               p->length,
+               0,
+               (SA*) &addr,
+               sizeof(addr));
   if (ret == -1) {
     artnet_error("Sendto failed: %s", strerror(errno));
     n->state.report_code = ARTNET_RCUDPFAIL;
