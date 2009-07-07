@@ -616,7 +616,8 @@ int artnet_net_inet_aton(const char *ip_address, struct in_addr *address) {
 #ifdef HAVE_INET_ATON
   if (!inet_aton(ip_address, address)) {
 #else
-  if ((*address = inet_addr(ip_address)) == INADDR_NONE) {
+  in_addr_t *addr = (in_addr_t*) address;
+  if ((*addr = inet_addr(ip_address)) == INADDR_NONE) {
 #endif
     artnet_error("IP conversion from %s failed", ip_address);
     return ARTNET_EARG;
