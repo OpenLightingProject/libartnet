@@ -25,6 +25,8 @@
 #include <sys/socket.h> // socket before net/if.h for mac
 #include <net/if.h>
 #include <sys/ioctl.h>
+#else
+typedef int socklen_t;
 #endif
 
 #include <unistd.h>
