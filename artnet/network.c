@@ -120,7 +120,7 @@ static int get_ifaces(iface_t **ift_head_r) {
 
   if_head = 0;
   if_iter = 0;
-  for(ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
+  for (ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
     if_tmp = check_iface(ifa_iter);
     if (if_tmp) {
       // We got new usable interface
@@ -139,7 +139,7 @@ static int get_ifaces(iface_t **ift_head_r) {
   //
   // TODO: Will probably not work on OS X, it should
   //      return AF_LINK -type sockaddr
-  for(if_iter = if_head; if_iter != NULL; if_iter = if_iter->next) {
+  for (if_iter = if_head; if_iter != NULL; if_iter = if_iter->next) {
     if_name = strdup(if_iter->if_name);
 
     // if this is an alias, get mac of real interface
@@ -204,7 +204,7 @@ static int get_ifaces(iface_t **ift_head_r) {
   for (;;) {
     buf = malloc(len);
 
-    if (buf == NULL){
+    if (buf == NULL) {
       artnet_error_malloc();
       ret = ARTNET_EMEM;
       goto e_free;
@@ -483,7 +483,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
   int maxfdp1 = n->sd + 1;
 
   FD_ZERO(&rset);
-  FD_SET(n->sd, &rset);
+  FD_SET((unsigned int) n->sd, &rset);
 
   tv.tv_usec = 0;
   tv.tv_sec = delay;
@@ -591,7 +591,7 @@ int artnet_net_reprogram(node n) {
 
 
 int artnet_net_set_fdset (node n, fd_set *fdset) {
-  FD_SET(n->sd, fdset);
+  FD_SET((unsigned int) n->sd, fdset);
   return ARTNET_EOK;
 }
 
