@@ -20,9 +20,13 @@
  */
 
 #include <errno.h>
+
+#ifndef WIN32
 #include <sys/socket.h> // socket before net/if.h for mac
 #include <net/if.h>
 #include <sys/ioctl.h>
+#endif
+
 #include <unistd.h>
 
 #include "private.h"
