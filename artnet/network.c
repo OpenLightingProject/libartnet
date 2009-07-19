@@ -439,7 +439,7 @@ int artnet_net_start(node n) {
     // check winsock version
     WSADATA wsaData;
     WORD wVersionRequested = MAKEWORD(2, 2);
-    if (WSAStartup(wVersionRequested, &wsaData); != 0)
+    if (WSAStartup(wVersionRequested, &wsaData) != 0)
       return (-1);
     if (wsaData.wVersion != wVersionRequested)
       return (-2);
@@ -494,8 +494,8 @@ int artnet_net_start(node n) {
       return ARTNET_ENET;
     }
 
-    if (SOCKET_ERROR ==
-        ioctlsocket(sock, FIONBIO, (unsigned long) &true_flag)) {
+    u_long true = 1;
+    if (SOCKET_ERROR == ioctlsocket(sock, FIONBIO, &true)) {
 
       artnet_error("ioctlsocket", artnet_net_last_error());
       artnet_net_close(sock);
@@ -688,9 +688,9 @@ int artnet_net_inet_aton(const char *ip_address, struct in_addr *address) {
  */
 const char *artnet_net_last_error() {
 #ifdef WIN32
-  static char[10] error_str;
+  static char error_str[10];
   int error = WSAGetLastError();
-  snprintf(error_str, sizeof(error_str) "%d", error);
+  snprintf(error_str, sizeof(error_str), "%d", error);
   return error_str;
 #else
   return strerror(errno);
