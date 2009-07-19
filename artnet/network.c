@@ -27,6 +27,9 @@
 #include <sys/ioctl.h>
 #else
 typedef int socklen_t;
+#include <winsock2.h>
+#include <Lm.h>
+#include <iphlpapi.h>
 #endif
 
 #include <unistd.h>
@@ -370,7 +373,9 @@ int artnet_net_init(node n, const char *preferred_ip) {
       printf("  bcast: %s\n" , inet_ntoa(ift->bcast_addr.sin_addr));
       printf("  hwaddr: ");
       for (i = 0; i < ARTNET_MAC_SIZE; i++) {
-        printf("%hhx:", ift->hw_addr[i]);
+        if (i)
+          printf(":");
+        printf("%02x", ift->hw_addr[i]);
       }
       printf("\n");
     }
@@ -433,7 +438,8 @@ int artnet_net_start(node n) {
 #ifdef WIN32
     // check winsock version
     WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData); != 0)
+    WORD wVersionRequested = MAKEWORD(2, 2);
+    if (WSAStartup(wVersionRequested, &wsaData); != 0)
       return (-1);
     if (wsaData.wVersion != wVersionRequested)
       return (-2);
@@ -483,15 +489,17 @@ int artnet_net_start(node n) {
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &true_flag,
         sizeof(true_flag)) < 0) {
 
-        artnet_error("Set reuse failed", artnet_net_last_error());
-        artnet_net_close(sock);
-        return ARTNET_ENET;
+      artnet_error("Set reuse failed", artnet_net_last_error());
+      artnet_net_close(sock);
+      return ARTNET_ENET;
     }
 
-    if (SOCKET_ERROR == ioctlsocket(n->sd, FIONBIO, &true_flag)) {
-        artnet_error("ioctlsocket", artnet_net_last_error());
-        artnet_net_close(sock);
-        return ARTNET_ENET;
+    if (SOCKET_ERROR ==
+        ioctlsocket(sock, FIONBIO, (unsigned long) &true_flag)) {
+
+      artnet_error("ioctlsocket", artnet_net_last_error());
+      artnet_net_close(sock);
+      return ARTNET_ENET;
     }
 #endif
 
@@ -653,8 +661,8 @@ int artnet_net_close(int sock) {
     artnet_error(artnet_net_last_error());
     return ARTNET_ENET;
   }
-  return ARTNET_EOK;
 #endif
+  return ARTNET_EOK;
 }
 
 
