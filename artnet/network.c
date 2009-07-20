@@ -115,6 +115,7 @@ static int get_ifaces(iface_t **if_head) {
   PIP_ADAPTER_INFO pAdapter = NULL;
   PIP_ADAPTER_INFO pAdapterInfo;
   ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+  unsigned int i;
   if_tail = NULL;
 
   while (1) {
@@ -214,10 +215,10 @@ static int get_ifaces(iface_t **if_head) {
     net = inet_addr(pAdapter->IpAddressList.IpAddress.String);
     mask = inet_addr(pAdapter->IpAddressList.IpMask.String);
 
-    strmcpy(iface->if_name, pAdapter->AdapterName, IFNAME_SIZE);
+    strncpy(iface->if_name, pAdapter->AdapterName, IFNAME_SIZE);
     memcpy(iface->hw_addr, pAdapter->Address, ARTNET_MAC_SIZE);
     iface->ip_addr.sin_addr.s_addr = net;
-    ifface->bcast_addr.sin_addr.s_addr = ((net & mask) | (0xFFFFFFFF ^ mask));
+    iface->bcast_addr.sin_addr.s_addr = ((net & mask) | (0xFFFFFFFF ^ mask));
   }
 
   free(pAdapterInfo);
