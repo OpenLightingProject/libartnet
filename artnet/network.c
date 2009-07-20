@@ -36,22 +36,6 @@ typedef int socklen_t;
 
 #include "private.h"
 
-enum { INITIAL_IFACE_COUNT = 10 };
-enum { IFACE_COUNT_INC = 5 };
-enum { IFNAME_SIZE = 32 }; // 32 sounds a reasonable size
-
-
-typedef struct iface_s {
-  struct sockaddr_in ip_addr;
-  struct sockaddr_in bcast_addr;
-  int8_t hw_addr[ARTNET_MAC_SIZE];
-  char   if_name[IFNAME_SIZE];
-  struct iface_s *next;
-} iface_t;
-
-unsigned long LOOPBACK_IP = 0x7F000001;
-
-
 #ifdef HAVE_GETIFADDRS
  #ifdef HAVE_LINUX_IF_PACKET_H
    #define USE_GETIFADDRS
@@ -65,7 +49,25 @@ unsigned long LOOPBACK_IP = 0x7F000001;
 #endif
 
 
-// free memory used by the iface's list
+enum { INITIAL_IFACE_COUNT = 10 };
+enum { IFACE_COUNT_INC = 5 };
+enum { IFNAME_SIZE = 32 }; // 32 sounds a reasonable size
+
+typedef struct iface_s {
+  struct sockaddr_in ip_addr;
+  struct sockaddr_in bcast_addr;
+  int8_t hw_addr[ARTNET_MAC_SIZE];
+  char   if_name[IFNAME_SIZE];
+  struct iface_s *next;
+} iface_t;
+
+unsigned long LOOPBACK_IP = 0x7F000001;
+
+
+/*
+ * Free memory used by the iface's list
+ * @param head a pointer to the head of the list
+ */
 static void free_ifaces(iface_t *head) {
   iface_t *ift, *ift_next;
 
@@ -75,9 +77,152 @@ static void free_ifaces(iface_t *head) {
   }
 }
 
+
+/*
+ * Add a new interface to an interface list
+ * @param head pointer to the head of the list
+ * @param tail pointer to the end of the list
+ * @return a new iface_t or void
+ */
+static iface_t *new_iface(iface_t **head, iface_t **tail) {
+  iface_t *iface = (iface_t*) calloc(1, sizeof(iface_t));
+
+  if (!iface) {
+    artnet_error("%s: calloc error %s" , __FUNCTION__, strerror(errno));
+    return NULL;
+  }
+  memset(iface, 0, sizeof(iface_t));
+
+  if (!*head) {
+    *head = *tail = iface;
+  } else {
+    (*tail)->next = iface;
+    *tail = iface;
+  }
+  return iface;
+}
+
+
 #ifdef WIN32
 
+/*
+ * Set if_head to point to a list of iface_t structures which represent the
+ * interfaces on this machine
+ * @param ift_head the address of the pointer to the head of the list
+ */
+static int get_ifaces(iface_t **if_head) {
+  iface_t *if_tail, *iface;
+  PIP_ADAPTER_INFO pAdapter = NULL;
+  PIP_ADAPTER_INFO pAdapterInfo;
+  ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
+  if_tail = NULL;
 
+  while (1) {
+    pAdapterInfo = (IP_ADAPTER_INFO*) malloc(ulOutBufLen);
+    if (!pAdapterInfo) {
+      artnet_error("Error allocating memory needed for GetAdaptersinfo");
+      return ARTNET_EMEM;
+    }
+
+    DWORD status = GetAdaptersInfo(pAdapterInfo, &ulOutBufLen);
+    if (status == NO_ERROR)
+      break;
+
+    free(pAdapterInfo);
+    if (status != ERROR_BUFFER_OVERFLOW) {
+      printf("GetAdaptersInfo failed with error: %d\n", (int) status);
+      return ARTNET_ENET;
+    }
+  }
+
+  pAdapter = pAdapterInfo;
+  for (pAdapter = pAdapterInfo;
+       pAdapter && pAdapter < pAdapterInfo + ulOutBufLen;
+       pAdapter = pAdapter->Next) {
+    unsigned long net, mask;
+
+    printf("\tComboIndex: \t%5d\n", (int)pAdapter->ComboIndex);
+    printf("\tAdapter Name: \t%s\n", pAdapter->AdapterName);
+    printf("\tAdapter Desc: \t%s\n", pAdapter->Description);
+    printf("\tAdapter Addr: \t");
+    for (i = 0; i < pAdapter->AddressLength; i++) {
+      if (i == (pAdapter->AddressLength - 1))
+        printf("%.2X\n", (int) pAdapter->Address[i]);
+     else
+        printf("%.2X-", (int) pAdapter->Address[i]);
+    }
+    /*
+     printf("\tIndex: \t%d\n", (int)pAdapter->Index);
+     printf("\tType: \t");
+     switch (pAdapter->Type) {
+     case MIB_IF_TYPE_OTHER:
+     printf("Other\n");
+     break;
+     case MIB_IF_TYPE_ETHERNET:
+     printf("Ethernet\n");
+     break;
+     case MIB_IF_TYPE_TOKENRING:
+     printf("Token Ring\n");
+     break;
+     case MIB_IF_TYPE_FDDI:
+     printf("FDDI\n");
+     break;
+     case MIB_IF_TYPE_PPP:
+     printf("PPP\n");
+     break;
+     case MIB_IF_TYPE_LOOPBACK:
+     printf("Lookback\n");
+     break;
+     case MIB_IF_TYPE_SLIP:
+     printf("Slip\n");
+     break;
+     default:
+     printf("Unknown type %ld\n", (long)pAdapter->Type);
+     break;
+     }
+
+     printf("\tIP Address: \t%s\n",
+     pAdapter->IpAddressList.IpAddress.String);
+     printf("\tIP Mask: \t%s\n", pAdapter->IpAddressList.IpMask.String);
+
+     printf("\tGateway: \t%s\n", pAdapter->GatewayList.IpAddress.String);
+     printf("\t***\n");
+
+     if (pAdapter->DhcpEnabled) {
+     printf("\tDHCP Enabled: Yes\n");
+     printf("\t  DHCP Server: \t%s\n",
+     pAdapter->DhcpServer.IpAddress.String);
+     } else
+     printf("\tDHCP Enabled: No\n");
+
+     if (pAdapter->HaveWins) {
+     printf("\tHave Wins: Yes\n");
+     printf("\t  Primary Wins Server:    %s\n",
+     pAdapter->PrimaryWinsServer.IpAddress.String);
+     printf("\t  Secondary Wins Server:  %s\n",
+     pAdapter->SecondaryWinsServer.IpAddress.String);
+     } else
+     printf("\tHave Wins: No\n");
+     pAdapter = pAdapter->Next;
+     printf("\n");
+     */
+
+    iface = new_iface(if_head, &if_tail);
+    if (!iface)
+      continue;
+
+    net = inet_addr(pAdapter->IpAddressList.IpAddress.String);
+    mask = inet_addr(pAdapter->IpAddressList.IpMask.String);
+
+    strmcpy(iface->if_name, pAdapter->AdapterName, IFNAME_SIZE);
+    memcpy(iface->hw_addr, pAdapter->Address, ARTNET_MAC_SIZE);
+    iface->ip_addr.sin_addr.s_addr = net;
+    ifface->bcast_addr.sin_addr.s_addr = ((net & mask) | (0xFFFFFFFF ^ mask));
+  }
+
+  free(pAdapterInfo);
+  return (ARTNET_EOK);
+}
 
 # else // not WIN32
 
@@ -85,84 +230,63 @@ static void free_ifaces(iface_t *head) {
 
 /*
  * Check if we are interested in this interface
- * @param ifa  pointer to a ifaddr struct
+ * @param ifa a pointer to a ifaddr struct
  */
-static iface_t *check_iface(struct ifaddrs *ifa) {
-  struct sockaddr_in *sin;
-  iface_t *ret = 0;
-
-  if (!ifa || !ifa->ifa_addr) return 0;
+static void add_iface_if_needed(iface_t **head, iface_t **tail,
+                                struct ifaddrs *ifa) {
 
   // skip down, loopback and non inet interfaces
-  if (!(ifa->ifa_flags & IFF_UP)) return 0;
-  if (ifa->ifa_flags & IFF_LOOPBACK) return 0;
-  if (ifa->ifa_addr->sa_family != AF_INET) return 0;
+  if (!ifa || !ifa->ifa_addr) return;
+  if (!(ifa->ifa_flags & IFF_UP)) return;
+  if (ifa->ifa_flags & IFF_LOOPBACK) return;
+  if (ifa->ifa_addr->sa_family != AF_INET) return;
 
-  ret = calloc(1, sizeof(iface_t));
-  if (ret == NULL) {
-    artnet_error("%s: calloc error %s" , __FUNCTION__, strerror(errno));
-    return 0;
-  }
-
-  sin = (struct sockaddr_in*) ifa->ifa_addr;
-  ret->ip_addr.sin_addr = sin->sin_addr;
-  strncpy(ret->if_name, ifa->ifa_name, IFNAME_SIZE-1);
+  iface_t *iface = new_iface(head, tail);
+  struct sockaddr_in *sin = (struct sockaddr_in*) ifa->ifa_addr;
+  iface->ip_addr.sin_addr = sin->sin_addr;
+  strncpy(iface->if_name, ifa->ifa_name, IFNAME_SIZE - 1);
 
   if (ifa->ifa_flags & IFF_BROADCAST) {
     sin = (struct sockaddr_in *) ifa->ifa_broadaddr;
-    ret->bcast_addr.sin_addr = sin->sin_addr;
+    iface->bcast_addr.sin_addr = sin->sin_addr;
   }
-  return ret;
 }
 
 
 /*
- * Returns a linked list of interfaces on this machine using getifaddrs
- *  loopback interfaces are skipped as well as interfaces which are down
- *
- * @param ift_head_r address of the pointer to the head of the list
+ * Set if_head to point to a list of iface_t structures which represent the
+ * interfaces on this machine
+ * @param ift_head the address of the pointer to the head of the list
  */
-static int get_ifaces(iface_t **ift_head_r) {
-  struct ifaddrs *ifa, *ifa_iter;
-  iface_t *if_head, *if_tmp, *if_iter;
+static int get_ifaces(iface_t **if_head) {
+  struct ifaddrs *ifa_list, *ifa_iter;
+  iface_t *if_tail, *if_iter;
   struct sockaddr_ll *sll;
   char *if_name, *cptr;
+  *if_head = if_tail = NULL;
 
-  if (getifaddrs(&ifa) != 0) {
+  if (getifaddrs(&ifa_list) != 0) {
     artnet_error("Error getting interfaces: %s", strerror(errno));
     return ARTNET_ENET;
   }
 
-  if_head = 0;
-  if_iter = 0;
-  for (ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
-    if_tmp = check_iface(ifa_iter);
-    if (if_tmp) {
-      // We got new usable interface
-      if (!if_iter) {
-        if_head = if_iter = if_tmp;
-      } else {
-        if_iter->next = if_tmp;
-        if_iter = if_tmp;
-      }
-    }
-  }
-
+  for (ifa_iter = ifa_list; ifa_iter; ifa_iter = ifa_iter->ifa_next)
+    add_iface_if_needed(if_head, &if_tail, ifa_iter);
 
   // Match up the interfaces with the corrosponding AF_PACKET interface
   // to fetch the hw addresses
   //
   // TODO: Will probably not work on OS X, it should
   //      return AF_LINK -type sockaddr
-  for (if_iter = if_head; if_iter != NULL; if_iter = if_iter->next) {
+  for (if_iter = *if_head; if_iter; if_iter = if_iter->next) {
     if_name = strdup(if_iter->if_name);
 
     // if this is an alias, get mac of real interface
     if ((cptr = strchr(if_name, ':')))
       *cptr = 0;
 
-    // Find corresponding iface_t -structure
-    for (ifa_iter = ifa; ifa_iter != NULL; ifa_iter = ifa_iter->ifa_next) {
+    // Find corresponding iface_t structure
+    for (ifa_iter = ifa_list; ifa_iter; ifa_iter = ifa_iter->ifa_next) {
       if ((!ifa_iter->ifa_addr) || ifa_iter->ifa_addr->sa_family != AF_PACKET)
         continue;
 
@@ -175,33 +299,28 @@ static int get_ifaces(iface_t **ift_head_r) {
     }
     free(if_name);
   }
-
-  *ift_head_r = if_head;
-  freeifaddrs(ifa);
+  freeifaddrs(ifa_list);
   return 0;
 }
 
 #else // no GETIFADDRS
 
 /*
- *
- * Returns a linked list of interfaces on this machine using ioctl's
- *  loopback interfaces are skipped as well as interfaces which are down
- *
- * @param ift_head_r address of the pointer to the head of the list
+ * Set if_head to point to a list of iface_t structures which represent the
+ * interfaces on this machine
+ * @param ift_head the address of the pointer to the head of the list
  */
-static int get_ifaces(iface_t **ift_head_r) {
+static int get_ifaces(iface_t **if_head) {
   struct ifconf ifc;
   struct ifreq *ifr, ifrcopy;
   struct sockaddr_in *sin;
   int len, lastlen, flags;
   char *buf, *ptr;
-  iface_t *ift_head, **ift_next, *ift;
+  iface_t *if_tail, *iface;
   int ret = ARTNET_EOK;
   int sd;
 
-  ift_head = NULL;
-  ift_next = &ift_head;
+  *if_head = if_tail = NULL;
 
   // create socket to get iface config
   sd = socket(PF_INET, SOCK_DGRAM, 0);
@@ -281,25 +400,12 @@ static int get_ifaces(iface_t **ift_head_r) {
       if ((flags & IFF_LOOPBACK))
         continue; //skip lookback
 
-      // interesting iface, better malloc for it ..
-      ift = calloc(1, sizeof(iface_t));
-
-      if (ift == NULL) {
-        artnet_error("%s : calloc error %s" , __FUNCTION__, strerror(errno));
-        ret = ARTNET_EMEM;
+      iface = new_iface(if_head, &if_tail);
+      if (!iface)
         goto e_free_list;
-      }
-
-      if (ift_head == NULL) {
-        ift_head = ift;
-      } else {
-        *ift_next = ift;
-      }
-
-      ift_next = &ift->next;
 
       sin = (struct sockaddr_in *) &ifr->ifr_addr;
-      ift->ip_addr.sin_addr = sin->sin_addr;
+      iface->ip_addr.sin_addr = sin->sin_addr;
 
       // fetch bcast address
 #ifdef SIOCGIFBRDADDR
@@ -311,7 +417,7 @@ static int get_ifaces(iface_t **ift_head_r) {
         }
 
         sin = (struct sockaddr_in *) &ifrcopy.ifr_broadaddr;
-        ift->bcast_addr.sin_addr = sin->sin_addr;
+        iface->bcast_addr.sin_addr = sin->sin_addr;
       }
 #endif
       // fetch hardware address
@@ -322,7 +428,7 @@ static int get_ifaces(iface_t **ift_head_r) {
           ret = ARTNET_ENET;
           goto e_free_list;
         }
-        memcpy(&ift->hw_addr, ifrcopy.ifr_hwaddr.sa_data, ARTNET_MAC_SIZE);
+        memcpy(&iface->hw_addr, ifrcopy.ifr_hwaddr.sa_data, ARTNET_MAC_SIZE);
       }
 #endif
 
@@ -330,16 +436,13 @@ static int get_ifaces(iface_t **ift_head_r) {
      * and hware addresses
      * i'll leave that for another day
      */
-    } else {
-      //
     }
   }
-  *ift_head_r = ift_head;
   free(buf);
   return ARTNET_EOK;
 
 e_free_list:
-  free_ifaces(ift_head);
+  free_ifaces(*if_head);
 e_free:
   free(buf);
   close(sd);
@@ -353,7 +456,6 @@ e_return:
 
 /*
  * Scan for interfaces, and work out which one the user wanted to use.
- *
  */
 int artnet_net_init(node n, const char *preferred_ip) {
   iface_t *ift, *ift_head = NULL;
@@ -423,8 +525,7 @@ e_return :
 
 
 /*
- * Commence listening on the sockets
- *
+ * Start listening on the socket
  */
 int artnet_net_start(node n) {
   int sock;
@@ -570,14 +671,11 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
   memcpy(&(p->from), &cliAddr.sin_addr, sizeof(struct in_addr));
   // should set to in here if we need it
   return ARTNET_EOK;
-
 }
 
 
 /*
- * Send a packet to the network
- *
- *
+ * Send a packet.
  */
 int artnet_net_send(node n, artnet_packet p) {
   struct sockaddr_in addr;
@@ -641,7 +739,7 @@ int artnet_net_reprogram(node n) {
 }*/
 
 
-int artnet_net_set_fdset (node n, fd_set *fdset) {
+int artnet_net_set_fdset(node n, fd_set *fdset) {
   FD_SET((unsigned int) n->sd, fdset);
   return ARTNET_EOK;
 }
@@ -654,7 +752,7 @@ int artnet_net_close(int sock) {
 #ifdef WIN32
   shutdown(sock, SD_BOTH);
   closesocket(sock);
-  WSACancelBlockingCall();
+  //WSACancelBlockingCall();
   WSACleanup();
 #else
   if (close(sock)) {
