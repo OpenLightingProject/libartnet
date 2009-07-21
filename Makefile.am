@@ -5,7 +5,7 @@ AUX_DIST                = $(auxdir)/install-sh $(auxdir)/missing \
 
 SUBDIRS = artnet 
 
-EXTRA_DIST = reconf libartnet.pc.in Doxyfile
+EXTRA_DIST = libartnet.pc.in Doxyfile
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libartnet.pc
