@@ -103,18 +103,21 @@ extern uint16_t HIGH_BYTE;
 #define bswap_16(x)  ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
 // htols : convert short from host to little endian order
-// ltohs : convert short from little endian to host order
-#ifdef HAVE_ENDIAN_H
-# if BYTE_ORDER == __BIG_ENDIAN
-#  define htols(x)   bswap_16 (x)
-# else
+#ifdef WIN32
 #  define htols(x)  (x)
-# endif
 #else
-# if BYTE_ORDER == BIG_ENDIAN
-#  define htols(x)   bswap_16 (x)
+# ifdef HAVE_ENDIAN_H
+#  if BYTE_ORDER == __BIG_ENDIAN
+#   define htols(x)   bswap_16 (x)
+#  else
+#   define htols(x)  (x)
+#  endif
 # else
-#  define htols(x)  (x)
+#  if BYTE_ORDER == BIG_ENDIAN
+#   define htols(x)   bswap_16 (x)
+#  else
+#   define htols(x)  (x)
+#  endif
 # endif
 #endif
 
