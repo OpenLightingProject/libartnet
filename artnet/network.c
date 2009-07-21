@@ -114,8 +114,9 @@ static int get_ifaces(iface_t **if_head) {
   iface_t *if_tail, *iface;
   PIP_ADAPTER_INFO pAdapter = NULL;
   PIP_ADAPTER_INFO pAdapterInfo;
+  IP_ADDR_STRING *ipAddress;
   ULONG ulOutBufLen = sizeof(IP_ADAPTER_INFO);
-  unsigned int i;
+  unsigned long net, mask;
   if_tail = NULL;
 
   while (1) {
@@ -136,89 +137,32 @@ static int get_ifaces(iface_t **if_head) {
     }
   }
 
-  pAdapter = pAdapterInfo;
   for (pAdapter = pAdapterInfo;
        pAdapter && pAdapter < pAdapterInfo + ulOutBufLen;
        pAdapter = pAdapter->Next) {
-    unsigned long net, mask;
 
-    printf("\tComboIndex: \t%5d\n", (int)pAdapter->ComboIndex);
-    printf("\tAdapter Name: \t%s\n", pAdapter->AdapterName);
-    printf("\tAdapter Desc: \t%s\n", pAdapter->Description);
-    printf("\tAdapter Addr: \t");
-    for (i = 0; i < pAdapter->AddressLength; i++) {
-      if (i == (pAdapter->AddressLength - 1))
-        printf("%.2X\n", (int) pAdapter->Address[i]);
-     else
-        printf("%.2X-", (int) pAdapter->Address[i]);
-    }
-    /*
-     printf("\tIndex: \t%d\n", (int)pAdapter->Index);
-     printf("\tType: \t");
-     switch (pAdapter->Type) {
-     case MIB_IF_TYPE_OTHER:
-     printf("Other\n");
-     break;
-     case MIB_IF_TYPE_ETHERNET:
-     printf("Ethernet\n");
-     break;
-     case MIB_IF_TYPE_TOKENRING:
-     printf("Token Ring\n");
-     break;
-     case MIB_IF_TYPE_FDDI:
-     printf("FDDI\n");
-     break;
-     case MIB_IF_TYPE_PPP:
-     printf("PPP\n");
-     break;
-     case MIB_IF_TYPE_LOOPBACK:
-     printf("Lookback\n");
-     break;
-     case MIB_IF_TYPE_SLIP:
-     printf("Slip\n");
-     break;
-     default:
-     printf("Unknown type %ld\n", (long)pAdapter->Type);
-     break;
-     }
-
-     printf("\tIP Address: \t%s\n",
-     pAdapter->IpAddressList.IpAddress.String);
-     printf("\tIP Mask: \t%s\n", pAdapter->IpAddressList.IpMask.String);
-
-     printf("\tGateway: \t%s\n", pAdapter->GatewayList.IpAddress.String);
-     printf("\t***\n");
-
-     if (pAdapter->DhcpEnabled) {
-     printf("\tDHCP Enabled: Yes\n");
-     printf("\t  DHCP Server: \t%s\n",
-     pAdapter->DhcpServer.IpAddress.String);
-     } else
-     printf("\tDHCP Enabled: No\n");
-
-     if (pAdapter->HaveWins) {
-     printf("\tHave Wins: Yes\n");
-     printf("\t  Primary Wins Server:    %s\n",
-     pAdapter->PrimaryWinsServer.IpAddress.String);
-     printf("\t  Secondary Wins Server:  %s\n",
-     pAdapter->SecondaryWinsServer.IpAddress.String);
-     } else
-     printf("\tHave Wins: No\n");
-     pAdapter = pAdapter->Next;
-     printf("\n");
-     */
-
-    iface = new_iface(if_head, &if_tail);
-    if (!iface)
+    if(pAdapter->Type != MIB_IF_TYPE_ETHERNET)
       continue;
 
-    net = inet_addr(pAdapter->IpAddressList.IpAddress.String);
-    mask = inet_addr(pAdapter->IpAddressList.IpMask.String);
+    for (ipAddress = &pAdapter->IpAddressList; ipAddress;
+         ipAddress = ipAddress->Next) {
 
-    strncpy(iface->if_name, pAdapter->AdapterName, IFNAME_SIZE);
-    memcpy(iface->hw_addr, pAdapter->Address, ARTNET_MAC_SIZE);
-    iface->ip_addr.sin_addr.s_addr = net;
-    iface->bcast_addr.sin_addr.s_addr = ((net & mask) | (0xFFFFFFFF ^ mask));
+      net = inet_addr(ipAddress->IpAddress.String);
+      if (net) {
+        // Windows doesn't seem to have the notion of an interface being 'up'
+        // so we check if this interface has an address assigned.
+        iface = new_iface(if_head, &if_tail);
+        if (!iface)
+          continue;
+
+        mask = inet_addr(ipAddress->IpMask.String);
+        strncpy(iface->if_name, pAdapter->AdapterName, IFNAME_SIZE);
+        memcpy(iface->hw_addr, pAdapter->Address, ARTNET_MAC_SIZE);
+        iface->ip_addr.sin_addr.s_addr = net;
+        iface->bcast_addr.sin_addr.s_addr = (
+            (net & mask) | (0xFFFFFFFF ^ mask));
+      }
+    }
   }
 
   free(pAdapterInfo);
@@ -478,7 +422,7 @@ int artnet_net_init(node n, const char *preferred_ip) {
       for (i = 0; i < ARTNET_MAC_SIZE; i++) {
         if (i)
           printf(":");
-        printf("%02x", ift->hw_addr[i]);
+        printf("%02x", (uint8_t) ift->hw_addr[i]);
       }
       printf("\n");
     }
