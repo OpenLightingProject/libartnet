@@ -15,6 +15,9 @@
 /* Define to 1 if you have the `getifaddrs' function. */
 #undef HAVE_GETIFADDRS
 
+/* Define to 1 if you have the `inet_aton' function. */
+#undef HAVE_INET_ATON
+
 /* Define to 1 if you have the `inet_ntoa' function. */
 #undef HAVE_INET_NTOA
 
@@ -109,9 +112,6 @@
 
 /* Define to 1 if the system supports IPv6 */
 #undef IPV6
-
-/* Define to 1 if the system supports IPv6 */
-#undef IPv6
 
 /* Name of package */
 #undef PACKAGE
