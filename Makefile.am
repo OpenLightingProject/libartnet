@@ -5,7 +5,7 @@ AUX_DIST                = $(auxdir)/install-sh $(auxdir)/missing \
 
 SUBDIRS = artnet debian
 
-EXTRA_DIST = libartnet.pc.in Doxyfile
+EXTRA_DIST = libartnet.pc.in Doxyfile README.debian
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libartnet.pc
