@@ -828,7 +828,7 @@ int handle(node n, artnet_packet p) {
       break;
     default:
       n->state.report_code = ARTNET_RCPARSEFAIL;
-      printf("artnet but not yet implemented!, op was %hx\n", p->type);
+      printf("artnet but not yet implemented!, op was %x\n", (int) p->type);
   }
   return 0;
 }
