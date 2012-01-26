@@ -8,8 +8,7 @@ libartnet_la_SOURCES = artnet.c private.h misc.c network.c receive.c \
 libartnet_la_LDFLAGS = -version-info 1:0:0
 
 if USING_WIN32
-libartnet_la_LDFLAGS += -no-undefined -liphlpapi -lnetapi32 -lcap -lws2_32 \
-                        -ldpnet
+libartnet_la_LDFLAGS += -no-undefined -liphlpapi -lnetapi32 -lws2_32 -ldpnet
 endif
 
 EXTRA_DIST = tod.h misc.h
