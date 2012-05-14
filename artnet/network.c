@@ -717,7 +717,8 @@ int artnet_net_inet_aton(const char *ip_address, struct in_addr *address) {
   if (!inet_aton(ip_address, address)) {
 #else
   in_addr_t *addr = (in_addr_t*) address;
-  if ((*addr = inet_addr(ip_address)) == INADDR_NONE) {
+  if ((*addr = inet_addr(ip_address)) == INADDR_NONE &&
+      strcmp(ip_address, "255.255.255.255")) {
 #endif
     artnet_error("IP conversion from %s failed", ip_address);
     return ARTNET_EARG;
