@@ -1369,8 +1369,8 @@ int artnet_dump_config(artnet_node vn) {
   printf("Node Type: %i\n", n->state.node_type);
   printf("Short Name: %s\n", n->state.short_name);
   printf("Long Name: %s\n", n->state.long_name);
-  printf("Subnet: %#hhx\n", n->state.subnet);
-  printf("Default Subnet: %#hhx\n", n->state.default_subnet);
+  printf("Subnet: %#02x\n", n->state.subnet);
+  printf("Default Subnet: %#02x\n", n->state.default_subnet);
   printf("Net Ctl: %i\n", n->state.subnet_net_ctl);
   printf("#####################\n");
 

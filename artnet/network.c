@@ -141,7 +141,7 @@ static int get_ifaces(iface_t **if_head) {
        pAdapter && pAdapter < pAdapterInfo + ulOutBufLen;
        pAdapter = pAdapter->Next) {
 
-    if(pAdapter->Type != MIB_IF_TYPE_ETHERNET)
+    if(pAdapter->Type != MIB_IF_TYPE_ETHERNET && pAdapter->Type != IF_TYPE_IEEE80211)
       continue;
 
     for (ipAddress = &pAdapter->IpAddressList; ipAddress;
