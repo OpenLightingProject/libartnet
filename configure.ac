@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(configure.in)
+AC_INIT(configure.ac)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(libartnet, 1.1.0)
 
