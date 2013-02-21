@@ -384,6 +384,7 @@ static int get_ifaces(iface_t **if_head) {
     }
   }
   free(buf);
+  close(sd);
   return ARTNET_EOK;
 
 e_free_list:

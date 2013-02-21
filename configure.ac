@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT(configure.ac)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE(libartnet, 1.1.0)
 
 # Checks for programs.
