@@ -508,13 +508,6 @@ int artnet_net_start(node n) {
     if (n->state.verbose)
       printf("Binding to %s \n", inet_ntoa(servAddr.sin_addr));
 
-    // bind sockets
-    if (bind(sock, (SA *) &servAddr, sizeof(servAddr)) == -1) {
-      artnet_error("Failed to bind to socket %s", artnet_net_last_error());
-      artnet_net_close(sock);
-      return ARTNET_ENET;
-    }
-
     // allow bcasting
     if (setsockopt(sock,
                    SOL_SOCKET,
@@ -548,7 +541,29 @@ int artnet_net_start(node n) {
       artnet_net_close(sock);
       return ARTNET_ENET;
     }
+#else
+// allow reusing 6454 port _ 
+    if (setsockopt(sock,
+                   SOL_SOCKET,
+                   SO_REUSEPORT,
+                   (char*) &true_flag, // char* for win32
+                   sizeof(int)) == -1) {
+      artnet_error("Failed to bind to socket %s", artnet_net_last_error());
+      artnet_net_close(sock);
+      return ARTNET_ENET;
+    }
 #endif
+
+    if (n->state.verbose)
+      printf("Binding to %s \n", inet_ntoa(servAddr.sin_addr));
+
+    // bind sockets
+    if (bind(sock, (SA *) &servAddr, sizeof(servAddr)) == -1) {
+      artnet_error("Failed to bind to socket %s", artnet_net_last_error());
+      artnet_net_close(sock);
+      return ARTNET_ENET;
+    }
+
 
     n->sd = sock;
     // Propagate the socket to all our peers
