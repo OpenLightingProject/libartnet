@@ -622,7 +622,8 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
     return ARTNET_ENET;
   }
 
-  if (cliAddr.sin_addr.s_addr == n->state.ip_addr.s_addr ||
+   if (((cliAddr.sin_addr.s_addr == n->state.ip_addr.s_addr) &&
+       !memcmp(p->data.ar.longname, n->state.long_name, ARTNET_LONG_NAME_LENGTH * sizeof(uint8_t)))||
       ntohl(cliAddr.sin_addr.s_addr) == LOOPBACK_IP) {
     p->length = 0;
     return ARTNET_EOK;
