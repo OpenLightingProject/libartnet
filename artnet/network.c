@@ -32,7 +32,13 @@ typedef int socklen_t;
 #include <iphlpapi.h>
 #endif
 
+// Visual Studio specific things, that may not be needed for MinGW/MSYS
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#else
 #include <unistd.h>
+#endif
 
 #include "private.h"
 
