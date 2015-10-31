@@ -445,7 +445,11 @@ typedef struct {
  * The main node structure
  */
 typedef struct artnet_node_s{
+  #ifdef WIN32
+  SOCKET sd;
+  #else
   int sd;                  // the two sockets
+  #endif
   node_state_t state;      // the state struct
   node_callbacks_t callbacks;  // the callbacks struct
   struct ports_s {

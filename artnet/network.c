@@ -28,7 +28,7 @@
 #else
 typedef int socklen_t;
 #include <winsock2.h>
-#include <Lm.h>
+#include <lm.h>
 #include <iphlpapi.h>
 #endif
 

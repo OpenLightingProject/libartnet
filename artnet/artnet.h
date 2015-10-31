@@ -28,7 +28,7 @@
 #ifndef WIN32
 #include <sys/select.h>
 #else
-#include <Winsock2.h>
+#include <winsock2.h>
 typedef unsigned long in_addr_t;
 #endif
 
