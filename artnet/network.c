@@ -21,7 +21,7 @@
 
 #include <errno.h>
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(_MSC_VER)
 #include <sys/socket.h> // socket before net/if.h for mac
 #include <net/if.h>
 #include <sys/ioctl.h>
@@ -480,7 +480,7 @@ e_return :
  * Start listening on the socket
  */
 int artnet_net_start(node n) {
-  int sock;
+  artnet_socket_t sock;
   struct sockaddr_in servAddr;
   int true_flag = TRUE;
   node tmp;
@@ -501,7 +501,7 @@ int artnet_net_start(node n) {
     // create socket
     sock = socket(PF_INET, SOCK_DGRAM, 0);
 
-    if (sock < 0) {
+    if (sock == INVALID_SOCKET) {
       artnet_error("Could not create socket %s", artnet_net_last_error());
       return ARTNET_ENET;
     }
@@ -715,7 +715,7 @@ int artnet_net_set_fdset(node n, fd_set *fdset) {
 /*
  * Close a socket
  */
-int artnet_net_close(int sock) {
+int artnet_net_close(artnet_socket_t sock) {
 #ifdef WIN32
   shutdown(sock, SD_BOTH);
   closesocket(sock);

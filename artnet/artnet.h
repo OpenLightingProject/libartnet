@@ -25,7 +25,7 @@
 // order is important here for osx
 #include <sys/types.h>
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(_MSC_VER)
 #include <sys/select.h>
 #else
 #include <winsock2.h>
@@ -210,6 +210,12 @@ typedef void *artnet_node;
 /** A list of remote ArtNet nodes */
 typedef void *artnet_node_list;
 
+#if !defined(WIN32) && !defined(_MSC_VER)
+typedef int artnet_socket_t;
+#else
+typedef SOCKET artnet_socket_t;
+#endif
+
 // node control functions
 EXTERN artnet_node artnet_new(const char *ip, int verbose);
 EXTERN int artnet_setoem(artnet_node vn, uint8_t hi, uint8_t lo);
@@ -334,10 +340,10 @@ EXTERN int artnet_nl_get_length(artnet_node_list nl);
 // misc
 EXTERN int artnet_dump_config(artnet_node n);
 EXTERN int artnet_get_config(artnet_node n, artnet_node_config_t *config);
-EXTERN int artnet_get_sd(artnet_node n);
+EXTERN artnet_socket_t artnet_get_sd(artnet_node n);
 EXTERN int artnet_set_fdset(artnet_node vn, fd_set *fdset);
 
-char *artnet_strerror();
+EXTERN char *artnet_strerror();
 
 #ifdef __cplusplus
 }
