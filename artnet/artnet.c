@@ -1387,7 +1387,7 @@ int artnet_dump_config(artnet_node vn) {
  * @param socket the index of the socket descriptor to fetch (0 or 1)
  * @return the socket descriptor
  */
-int artnet_get_sd(artnet_node vn) {
+artnet_socket_t artnet_get_sd(artnet_node vn) {
   node n = (node) vn;
   check_nullnode(vn);
 
