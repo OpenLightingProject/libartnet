@@ -404,8 +404,8 @@ int artnet_tx_build_art_poll_reply(node n) {
     ar->porttypes[i] = n->ports.types[i];
     ar->goodinput[i] = n->ports.in[i].port_status;
     ar->goodoutput[i] = n->ports.out[i].port_status;
-    ar->swin[i] = n->ports.in[i].port_addr;
-    ar->swout[i] = n->ports.out[i].port_addr;
+    ar->swin[i] = n->ports.in[i].port_addr & LOW_NIBBLE;
+    ar->swout[i] = n->ports.out[i].port_addr & LOW_NIBBLE;
   }
 
   ar->swvideo  = 0;
