@@ -20,7 +20,7 @@
 
 #include "private.h"
 
-uint8_t _make_addr(uint8_t subnet, uint8_t addr);
+uint16_t _make_addr(uint8_t subnet, uint8_t addr);
 void check_merge_timeouts(node n, int port);
 void merge(node n, int port, int length, uint8_t *latest);
 
@@ -284,8 +284,8 @@ int handle_address(node n, artnet_packet p) {
   if (old_subnet != n->state.subnet) {
     // if it does we need to change all port addresses
     for(i=0; i< ARTNET_MAX_PORTS; i++) {
-      n->ports.in[i].port_addr = _make_addr(n->state.subnet, n->ports.in[i].port_addr);
-      n->ports.out[i].port_addr = _make_addr(n->state.subnet, n->ports.out[i].port_addr);
+      n->ports.in[i].port_addr = _make_addr(n->state.subnet, (uint8_t)n->ports.in[i].port_addr);
+      n->ports.out[i].port_addr = _make_addr(n->state.subnet, (uint8_t)n->ports.out[i].port_addr);
     }
   }
 
@@ -856,7 +856,7 @@ int16_t get_type(artnet_packet p) {
 /*
  * takes a subnet and an address and creates the universe address
  */
-uint8_t _make_addr(uint8_t subnet, uint8_t addr) {
+uint16_t _make_addr(uint8_t subnet, uint8_t addr) {
   return ((subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
 }
 

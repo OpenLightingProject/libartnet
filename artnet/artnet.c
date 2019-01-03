@@ -64,7 +64,7 @@ uint16_t LOW_BYTE = 0x00FF;
 uint16_t HIGH_BYTE = 0xFF00;
 
 void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply);
-int find_nodes_from_uni(node_list_t *nl, uint8_t uni, SI *ips, int size);
+int find_nodes_from_uni(node_list_t *nl, uint16_t uni, SI *ips, int size);
 
 /*
  * Creates a new ArtNet node.
@@ -1561,15 +1561,17 @@ node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip) {
  * @param size size of ips
  * @return number of nodes matched
  */
-int find_nodes_from_uni(node_list_t *nl, uint8_t uni, SI *ips, int size) {
+int find_nodes_from_uni(node_list_t *nl, uint16_t uni, SI *ips, int size) {
   node_entry_private_t *tmp;
   int count = 0;
   int i,j = 0;
+  uint16_t outputUniverse = 0;
 
   for (tmp = nl->first; tmp; tmp = tmp->next) {
     int added = FALSE;
     for (i =0; i < tmp->pub.numbports; i++) {
-      if (tmp->pub.swout[i] == uni && ips) {
+      outputUniverse = (tmp->pub.swout[i] & LOW_NIBBLE) | tmp->pub.sub << 4;
+      if (outputUniverse == uni && ips) {
         if (j < size && !added) {
           ips[j++] = tmp->ip;
           added = TRUE;

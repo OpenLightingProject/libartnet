@@ -282,7 +282,7 @@ typedef struct {
 
 // first a generic port
 typedef struct {
-  uint8_t addr;        // the port address
+  uint16_t addr;        // the port address
   uint8_t default_addr;    // the address set by the hardware
   uint8_t net_ctl;      // if the port address is under network control
   uint8_t status;        // status of the port
