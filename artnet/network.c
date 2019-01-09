@@ -589,7 +589,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
   socklen_t cliLen = sizeof(cliAddr);
   fd_set rset;
   struct timeval tv;
-  int maxfdp1 = n->sd + 1;
+  int maxfdp1 = (int)n->sd + 1;
 
   FD_ZERO(&rset);
   FD_SET((unsigned int) n->sd, &rset);
@@ -634,7 +634,7 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
     return ARTNET_EOK;
   }
 
-  p->length = len;
+  p->length = (int)len;
   memcpy(&(p->from), &cliAddr.sin_addr, sizeof(struct in_addr));
   // should set to in here if we need it
   return ARTNET_EOK;
