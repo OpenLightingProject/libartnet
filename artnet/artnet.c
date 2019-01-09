@@ -116,6 +116,8 @@ artnet_node artnet_new(const char *ip, int verbose) {
   n->state.report_code = ARTNET_RCPOWEROK;
   n->state.reply_addr.s_addr = 0;
   n->state.mode = ARTNET_STANDBY;
+  n->receive_port = ARTNET_PORT;
+  n->send_port = ARTNET_PORT;
 
   // set all ports to MERGE HTP mode and disable
   for (i=0; i < ARTNET_MAX_PORTS; i++) {
@@ -220,6 +222,11 @@ int artnet_destroy(artnet_node vn) {
   return ARTNET_EOK;
 }
 
+void artnet_set_network_ports(artnet_node vn, uint16_t receive_port, uint16_t send_port) {
+    node n = (node)vn;
+    n->receive_port = receive_port;
+    n->send_port = send_port;
+}
 
 /*
  * Set the OEM code

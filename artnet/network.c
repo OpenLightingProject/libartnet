@@ -508,7 +508,7 @@ int artnet_net_start(node n) {
 
     memset(&servAddr, 0x00, sizeof(servAddr));
     servAddr.sin_family = AF_INET;
-    servAddr.sin_port = htons(ARTNET_PORT);
+    servAddr.sin_port = htons(n->receive_port);
     servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (n->state.verbose)
@@ -628,8 +628,11 @@ int artnet_net_recv(node n, artnet_packet p, int delay) {
     return ARTNET_ENET;
   }
 
-  if (cliAddr.sin_addr.s_addr == n->state.ip_addr.s_addr ||
-      ntohl(cliAddr.sin_addr.s_addr) == LOOPBACK_IP) {
+  // Prevent receiving our own messages, except if using non-standard ports,
+  // in which case the user is running several nodes on the same machine for debugging.
+  if ((cliAddr.sin_addr.s_addr == n->state.ip_addr.s_addr ||
+      ntohl(cliAddr.sin_addr.s_addr) == LOOPBACK_IP) &&
+      n->send_port == n->receive_port ) {
     p->length = 0;
     return ARTNET_EOK;
   }
@@ -652,7 +655,7 @@ int artnet_net_send(node n, artnet_packet p) {
     return ARTNET_EACTION;
 
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(ARTNET_PORT);
+  addr.sin_port = htons(n->send_port);
   addr.sin_addr = p->to;
   p->from = n->state.ip_addr;
 

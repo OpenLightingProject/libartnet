@@ -225,6 +225,11 @@ EXTERN int artnet_start(artnet_node n);
 EXTERN int artnet_read(artnet_node n, int timeout);
 EXTERN int artnet_stop(artnet_node n);
 EXTERN int artnet_destroy(artnet_node n);
+// Changes the network ports used by the node. This function is useful for debugging
+// (it makes it possible to run multiple devices on the same computer), but must not
+// be used in production, because the network port is fixed by the spec.
+// Must be called before artnet_start().
+EXTERN void artnet_set_network_ports(artnet_node n, uint16_t receive_port, uint16_t send_port);
 
 int artnet_join(artnet_node vn1, artnet_node vn2);
 
