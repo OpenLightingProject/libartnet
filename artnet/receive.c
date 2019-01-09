@@ -20,7 +20,7 @@
 
 #include "private.h"
 
-uint16_t _make_addr(uint8_t subnet, uint8_t addr);
+uint16_t _make_addr(uint8_t net, uint8_t subnet, uint8_t addr);
 void check_merge_timeouts(node n, int port);
 void merge(node n, int port, int length, uint8_t *latest);
 
@@ -238,7 +238,7 @@ void handle_dmx(node n, artnet_packet p) {
  *
  */
 int handle_address(node n, artnet_packet p) {
-  int i, old_subnet;
+  int i, old_subnet, old_net;
   int addr[ARTNET_MAX_PORTS];
   int ret;
 
@@ -269,9 +269,11 @@ int handle_address(node n, artnet_packet p) {
   }
 
   // program subnet
+  old_net = p->data.addr.net;
   old_subnet = p->data.addr.subnet;
   if (p->data.addr.subnet == PROGRAM_DEFAULTS) {
     // reset to defaults
+    n->state.net = n->state.default_net;
     n->state.subnet = n->state.default_subnet;
     n->state.subnet_net_ctl = FALSE;
 
@@ -281,11 +283,11 @@ int handle_address(node n, artnet_packet p) {
   }
 
   // check if subnet has actually changed
-  if (old_subnet != n->state.subnet) {
+  if (old_net != n->state.net || old_subnet != n->state.subnet) {
     // if it does we need to change all port addresses
     for(i=0; i< ARTNET_MAX_PORTS; i++) {
-      n->ports.in[i].port_addr = _make_addr(n->state.subnet, (uint8_t)n->ports.in[i].port_addr);
-      n->ports.out[i].port_addr = _make_addr(n->state.subnet, (uint8_t)n->ports.out[i].port_addr);
+      n->ports.in[i].port_addr = _make_addr(n->state.net, n->state.subnet, (uint8_t)n->ports.in[i].port_addr);
+      n->ports.out[i].port_addr = _make_addr(n->state.net, n->state.subnet, (uint8_t)n->ports.out[i].port_addr);
     }
   }
 
@@ -295,11 +297,11 @@ int handle_address(node n, artnet_packet p) {
       continue;
     } else if (p->data.addr.swin[i] == PROGRAM_DEFAULTS) {
       // reset to defaults
-      n->ports.in[i].port_addr = _make_addr(n->state.subnet, n->ports.in[i].port_default_addr);
+      n->ports.in[i].port_addr = _make_addr(n->state.net, n->state.subnet, n->ports.in[i].port_default_addr);
       n->ports.in[i].port_net_ctl = FALSE;
 
     } else if ( p->data.addr.swin[i] & PROGRAM_CHANGE_MASK) {
-      n->ports.in[i].port_addr = _make_addr(n->state.subnet, p->data.addr.swin[i]);
+      n->ports.in[i].port_addr = _make_addr(n->state.net, n->state.subnet, p->data.addr.swin[i]);
       n->ports.in[i].port_net_ctl = TRUE;
     }
   }
@@ -310,11 +312,11 @@ int handle_address(node n, artnet_packet p) {
       continue;
     } else if (p->data.addr.swout[i] == PROGRAM_DEFAULTS) {
       // reset to defaults
-      n->ports.out[i].port_addr = _make_addr(n->state.subnet, n->ports.out[i].port_default_addr);
+      n->ports.out[i].port_addr = _make_addr(n->state.net, n->state.subnet, n->ports.out[i].port_default_addr);
       n->ports.out[i].port_net_ctl = FALSE;
       n->ports.out[i].port_enabled = TRUE;
     } else if ( p->data.addr.swout[i] & PROGRAM_CHANGE_MASK) {
-      n->ports.out[i].port_addr = _make_addr(n->state.subnet, p->data.addr.swout[i]);
+      n->ports.out[i].port_addr = _make_addr(n->state.net, n->state.subnet, p->data.addr.swout[i]);
       n->ports.in[i].port_net_ctl = TRUE;
       n->ports.out[i].port_enabled = TRUE;
     }
@@ -854,10 +856,10 @@ int16_t get_type(artnet_packet p) {
 
 
 /*
- * takes a subnet and an address and creates the universe address
+ * takes a net, subnet and an address and creates the universe address
  */
-uint16_t _make_addr(uint8_t subnet, uint8_t addr) {
-  return ((subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
+uint16_t _make_addr(uint8_t net, uint8_t subnet, uint8_t addr) {
+  return (net << 8 ) | ((subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
 }
 
 

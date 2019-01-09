@@ -417,6 +417,7 @@ typedef struct {
   SI ip_addr;
   SI bcast_addr;
   uint8_t hw_addr[ARTNET_MAC_SIZE];
+  uint8_t default_net;
   uint8_t default_subnet;
   uint8_t subnet_net_ctl;
   int send_apr_on_change;
@@ -425,6 +426,7 @@ typedef struct {
   char short_name[ARTNET_SHORT_NAME_LENGTH];
   char long_name[ARTNET_LONG_NAME_LENGTH];
   char report[ARTNET_REPORT_LENGTH];
+  uint8_t net;
   uint8_t subnet;
   uint8_t oem_hi;
   uint8_t oem_lo;

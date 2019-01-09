@@ -96,7 +96,7 @@ struct artnet_reply_s {
   uint16_t port;
   uint8_t  verH;
   uint8_t  ver;
-  uint8_t  subH;
+  uint8_t  net;
   uint8_t  sub;
   uint8_t  oemH;
   uint8_t  oem;
@@ -195,7 +195,7 @@ struct artnet_address_s {
   uint16_t opCode;
   uint8_t  verH;
   uint8_t  ver;
-  uint8_t  filler1;
+  uint8_t  net;
   uint8_t  filler2;
   uint8_t  shortname[ARTNET_SHORT_NAME_LENGTH];
   uint8_t  longname[ARTNET_LONG_NAME_LENGTH];
@@ -254,7 +254,7 @@ struct artnet_todrequest_s {
   uint8_t  spare5;
   uint8_t  spare6;
   uint8_t  spare7;
-  uint8_t  spare8;
+  uint8_t  net;
   uint8_t  command;
   uint8_t  adCount;
   uint8_t  address[ARTNET_MAX_RDM_ADCOUNT];
@@ -278,7 +278,7 @@ struct artnet_toddata_s {
   uint8_t  spare5;
   uint8_t  spare6;
   uint8_t  spare7;
-  uint8_t  spare8;
+  uint8_t  net;
   uint8_t  cmdRes;
   uint8_t  address;
   uint8_t  uidTotalHi;

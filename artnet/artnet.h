@@ -171,7 +171,8 @@ typedef enum {
 typedef struct artnet_node_entry_s {
   uint8_t ip[ARTNET_IP_SIZE];  /**< The IP address, Network byte ordered*/
   int16_t ver;          /**< The firmware version */
-  int16_t sub;          /**< The subnet address */
+  int8_t net;           /**< The net address */
+  int8_t sub;           /**< The subnet address */
   int16_t oem;          /**< The OEM value */
   uint8_t ubea;          /**< The UBEA version */
   uint8_t status;
@@ -198,6 +199,7 @@ typedef artnet_node_entry_t *artnet_node_entry;
 typedef struct {
   char short_name[ARTNET_SHORT_NAME_LENGTH];
   char long_name[ARTNET_LONG_NAME_LENGTH];
+  uint8_t net;
   uint8_t subnet;
   uint8_t in_ports[ARTNET_MAX_PORTS];
   uint8_t out_ports[ARTNET_MAX_PORTS];
@@ -272,6 +274,7 @@ EXTERN int artnet_send_address(artnet_node n,
   const char *longName,
   uint8_t inAddr[ARTNET_MAX_PORTS],
   uint8_t outAddr[ARTNET_MAX_PORTS],
+  uint8_t net,
   uint8_t subAddr,
   artnet_port_command_t cmd);
 EXTERN int artnet_send_input(artnet_node n,
@@ -326,7 +329,7 @@ EXTERN int artnet_set_port_addr(artnet_node n,
                                 int id,
                                 artnet_port_dir_t dir,
                                 uint8_t addr);
-EXTERN int artnet_set_subnet_addr(artnet_node n, uint8_t subnet);
+EXTERN int artnet_set_net_subnet_addr(artnet_node n, uint8_t net, uint8_t subnet);
 EXTERN int artnet_get_universe_addr(artnet_node n,
                                     int id,
                                     artnet_port_dir_t dir);
