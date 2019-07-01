@@ -639,6 +639,11 @@ int handle_firmware(node n, artnet_packet p) {
 
     // length should be the remaining data
     block_length = n->firmware.bytes_total % (ARTNET_FIRMWARE_SIZE * sizeof(uint16_t));
+    if (block_length == 0) {
+      // remaining firmware size matches exactly maximum data size
+      block_length = ARTNET_FIRMWARE_SIZE * sizeof(uint16_t);
+      total_blocks--;
+    }
     block_id = p->data.firmware.blockId;
 
     // ok the blockid field is only 1 byte, so it wraps back to 0x00 we
