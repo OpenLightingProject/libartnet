@@ -582,7 +582,7 @@ int handle_firmware(node n, artnet_packet p) {
           n->callbacks.firmware_c.fh(n,
                                      n->firmware.ubea,
                                      n->firmware.data,
-                                     n->firmware.bytes_total,
+                                     n->firmware.bytes_total / sizeof(p->data.firmware.data[0]),
                                      n->callbacks.firmware_c.data);
 
       } else {
