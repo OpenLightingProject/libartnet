@@ -163,7 +163,7 @@ int artnet_tx_tod_data(node n, int id) {
   bloc = 0;
 
   while (remaining > 0) {
-    memset(&tod.data.toddata.tod,0x00, ARTNET_MAX_UID_COUNT);
+    memset(&tod.data.toddata.tod, 0x00, ARTNET_MAX_UID_COUNT * sizeof(tod.data.toddata.tod[0]));
     lim = min(ARTNET_MAX_UID_COUNT, remaining);
     tod.data.toddata.blockCount = bloc++;
     tod.data.toddata.uidCount = lim;
