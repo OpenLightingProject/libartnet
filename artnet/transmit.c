@@ -346,7 +346,7 @@ int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm) {
     firm->expected_block++;
     // limit between 0 and 255 (only 8 bits wide)
     // we dont' actually need this cause it will be shorted when assigned above
-    firm->expected_block %= UINT8_MAX;
+    firm->expected_block %= (UINT8_MAX + 1);
   }
   return ARTNET_EOK;
 }
