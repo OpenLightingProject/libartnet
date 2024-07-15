@@ -1,5 +1,5 @@
 
-AM_CFLAGS = -I$(top_builddir) -I$(top_srcdir) -Wall -Werror -Wformat -W
+AM_CFLAGS = -I$(top_builddir) -I$(top_srcdir) -Wall -Wformat -W
 
 EXTRA_DIST = tod.h misc.h
 
