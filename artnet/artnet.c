@@ -586,10 +586,9 @@ int artnet_send_poll_reply(artnet_node vn) {
   return artnet_tx_poll_reply(n, FALSE);
 }
 
-int artnet_send_dmx_to_addr(artnet_node vn, int port_id, int16_t length, const uint8_t *data, const char* address) {
+int artnet_send_dmx_to_addr(artnet_node vn, int port_id, int16_t length, const uint8_t *data, uint32_t address) {
   node n = vn;
   artnet_packet_t p;
-  int ret;
   input_port_t *port;
 
   check_nullnode(vn);
@@ -632,11 +631,10 @@ int artnet_send_dmx_to_addr(artnet_node vn, int port_id, int16_t length, const u
   p.data.admx.length = short_get_low_byte(length);
   memcpy(&p.data.admx.data, data, length);
 
-  p.to.s_addr = inet_addr(address);
+  p.to.s_addr = address;
   artnet_net_send(n, &p);
   return ARTNET_EOK;
 }
-
 
 /*
  * Sends some dmx data
