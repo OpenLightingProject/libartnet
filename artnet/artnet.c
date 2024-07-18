@@ -586,6 +586,57 @@ int artnet_send_poll_reply(artnet_node vn) {
   return artnet_tx_poll_reply(n, FALSE);
 }
 
+int artnet_send_dmx_to_addr(artnet_node vn, int port_id, int16_t length, const uint8_t *data, const char* address) {
+  node n = vn;
+  artnet_packet_t p;
+  int ret;
+  input_port_t *port;
+
+  check_nullnode(vn);
+
+  if (n->state.mode != ARTNET_ON) {
+    return ARTNET_EACTION;
+  }
+  if (port_id < 0 || port_id >= ARTNET_MAX_PORTS) {
+    artnet_error("%s : port index out of bounds (%i < 0 || %i > ARTNET_MAX_PORTS)", __FUNCTION__, port_id);
+    return ARTNET_EARG;
+  }
+  port = &n->ports.in[port_id];
+
+  if (length < 1 || length > ARTNET_DMX_LENGTH) {
+    artnet_error("%s : Length of dmx data out of bounds (%i < 1 || %i > ARTNET_MAX_DMX)", __FUNCTION__, length);
+    return ARTNET_EARG;
+  }
+
+  if (port->port_status & PORT_STATUS_DISABLED_MASK) {
+    artnet_error("%s : attempt to send on a disabled port (id:%i)", __FUNCTION__, port_id);
+    return ARTNET_EARG;
+  }
+
+  // ok we're going to send now, make sure we turn the activity bit on
+  port->port_status = port->port_status | PORT_STATUS_ACT_MASK;
+
+  p.length = sizeof(artnet_dmx_t) - (ARTNET_DMX_LENGTH - length);
+
+  // now build packet
+  memcpy(&p.data.admx.id, ARTNET_STRING, ARTNET_STRING_SIZE);
+  p.data.admx.opCode =  htols(ARTNET_DMX);
+  p.data.admx.verH = 0;
+  p.data.admx.ver = ARTNET_VERSION;
+  p.data.admx.sequence = port->seq;
+  p.data.admx.physical = port_id;
+  p.data.admx.universe = htols(port->port_addr);
+
+  // set length
+  p.data.admx.lengthHi = short_get_high_byte(length);
+  p.data.admx.length = short_get_low_byte(length);
+  memcpy(&p.data.admx.data, data, length);
+
+  p.to.s_addr = inet_addr(address);
+  artnet_net_send(n, &p);
+  return ARTNET_EOK;
+}
+
 
 /*
  * Sends some dmx data
