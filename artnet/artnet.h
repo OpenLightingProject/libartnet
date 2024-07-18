@@ -258,6 +258,11 @@ EXTERN int artnet_send_poll(artnet_node n,
   const char *ip,
   artnet_ttm_value_t talk_to_me);
 EXTERN int artnet_send_poll_reply(artnet_node n);
+EXTERN int artnet_send_dmx_to_addr(artnet_node n,
+int port_id,
+int16_t length,
+const uint8_t *data,
+const char* address);
 EXTERN int artnet_send_dmx(artnet_node n,
   int port_id,
   int16_t length,
