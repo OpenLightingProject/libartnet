@@ -72,7 +72,7 @@ if(HAVE_SOCKADDR_SA_LEN)
 endif()
 
 # Generate config.h
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/config.h @ONLY)
 
 # Set the C standard
 set(CMAKE_C_STANDARD 99)
