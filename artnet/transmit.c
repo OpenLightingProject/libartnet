@@ -365,7 +365,7 @@ int artnet_tx_build_art_poll_reply(node n) {
   memcpy(&ar->id, ARTNET_STRING, ARTNET_STRING_SIZE);
   ar->opCode = htols(ARTNET_REPLY);
   memcpy(&ar->ip, &n->state.ip_addr.s_addr, 4);
-  ar->port = htols(ARTNET_PORT);
+  ar->port = htols(n->send_port);
   ar->verH = 0;
   ar->ver = 0;
   ar->subH = 0;
