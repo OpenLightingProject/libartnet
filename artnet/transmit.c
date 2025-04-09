@@ -163,7 +163,7 @@ int artnet_tx_tod_data(node n, int id) {
   bloc = 0;
 
   while (remaining > 0) {
-    memset(&tod.data.toddata.tod,0x00, ARTNET_MAX_UID_COUNT);
+    memset(&tod.data.toddata.tod, 0x00, ARTNET_MAX_UID_COUNT * sizeof(tod.data.toddata.tod[0]));
     lim = min(ARTNET_MAX_UID_COUNT, remaining);
     tod.data.toddata.blockCount = bloc++;
     tod.data.toddata.uidCount = lim;
@@ -272,7 +272,7 @@ int artnet_tx_firmware_reply(node n, in_addr_t ip,
 int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm) {
   artnet_packet_t p;
   uint8_t type = 0;
-  int data_len, max_len, ret;
+  int data_len, max_len, remaining, ret;
 
   memset(&p, 0x0, sizeof(p));
 
@@ -282,6 +282,7 @@ int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm) {
   // calculate length
   data_len = firm->bytes_total - firm->bytes_current;
   data_len = min(data_len, max_len);
+  remaining = firm->bytes_total - firm->bytes_current - data_len;
 
   // work out type - 6 cases
   if(firm->ubea) {
@@ -289,10 +290,10 @@ int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm) {
     if (firm->bytes_current == 0) {
       // first
       type = ARTNET_FIRMWARE_UBEAFIRST;
-    } else if (data_len == max_len) {
+    } else if ((data_len == max_len) && (remaining > 0)) {
       // cont
       type = ARTNET_FIRMWARE_UBEACONT;
-    } else if (data_len < max_len) {
+    } else if ((data_len < max_len) || ((data_len == max_len) && (remaining == 0))) {
       // last
       type = ARTNET_FIRMWARE_UBEALAST;
     } else {
@@ -304,10 +305,10 @@ int artnet_tx_firmware_packet(node n, firmware_transfer_t *firm) {
     if (firm->bytes_current == 0) {
       // first
       type = ARTNET_FIRMWARE_FIRMFIRST;
-    } else if (data_len == max_len) {
+    } else if ((data_len == max_len) && (remaining > 0)) {
       // cont
       type = ARTNET_FIRMWARE_FIRMCONT;
-    } else if (data_len < max_len) {
+    } else if ((data_len < max_len) || ((data_len == max_len) && (remaining == 0))) {
       // last
       type = ARTNET_FIRMWARE_FIRMLAST;
     } else {
