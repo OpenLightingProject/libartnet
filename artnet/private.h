@@ -282,7 +282,7 @@ typedef struct {
 
 // first a generic port
 typedef struct {
-  uint8_t addr;        // the port address
+  uint16_t addr;        // the port address
   uint8_t default_addr;    // the address set by the hardware
   uint8_t net_ctl;      // if the port address is under network control
   uint8_t status;        // status of the port
@@ -417,6 +417,7 @@ typedef struct {
   SI ip_addr;
   SI bcast_addr;
   uint8_t hw_addr[ARTNET_MAC_SIZE];
+  uint8_t default_net;
   uint8_t default_subnet;
   uint8_t subnet_net_ctl;
   int send_apr_on_change;
@@ -425,6 +426,7 @@ typedef struct {
   char short_name[ARTNET_SHORT_NAME_LENGTH];
   char long_name[ARTNET_LONG_NAME_LENGTH];
   char report[ARTNET_REPORT_LENGTH];
+  uint8_t net;
   uint8_t subnet;
   uint8_t oem_hi;
   uint8_t oem_lo;
