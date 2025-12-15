@@ -1,0 +1,132 @@
+# Build directories
+build/
+build*/
+out/
+bin/
+obj/
+lib/
+*.build/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+*.cmake
+!CMakeLists.txt
+!cmake/*.cmake.in
+!libartnet.pc.cmake
+
+# Generated config files
+config.h
+config.log
+config.status
+libartnet.pc
+
+# Autotools generated files
+Makefile
+Makefile.in
+.deps/
+.libs/
+*.la
+*.lo
+*.o
+*.so
+*.so.*
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+libtool
+aclocal.m4
+autom4te.cache/
+configure
+compile
+depcomp
+install-sh
+missing
+ltmain.sh
+config.guess
+config.sub
+ar-lib
+test-driver
+
+# Debian packaging
+debian/files
+debian/*.log
+debian/*.substvars
+debian/tmp/
+debian/.debhelper/
+debian/libartnet*/
+
+# MSVC files
+*.vcxproj.user
+*.sln.docstates
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+.vs/
+x64/
+x86/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+*.pdb
+*.ilk
+*.exp
+
+# Editor and IDE files
+*.swp
+*.swo
+*~
+.*.sw?
+.vscode/
+.idea/
+*.sublime-*
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Archive files
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+
+# Documentation generated files
+html/
+latex/
+docs/_build/
+doxygen_output/
+
+# Test and coverage files
+*.gcov
+*.gcda
+*.gcno
+*.coverage
+coverage/
+test_results/
+
+# Package files
+*.deb
+*.rpm
+*.pkg
+*.dmg
+
+# Tags and ctags
+tags
+TAGS
+.tags
+.tags_sorted_by_file
+
+# vscode
+.cache
