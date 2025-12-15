@@ -64,7 +64,7 @@ uint16_t LOW_BYTE = 0x00FF;
 uint16_t HIGH_BYTE = 0xFF00;
 
 void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply);
-int find_nodes_from_uni(node_list_t *nl, uint8_t uni, SI *ips, int size);
+int find_nodes_from_uni(node_list_t *nl, uint16_t uni, SI *ips, int size);
 
 /*
  * Creates a new ArtNet node.
@@ -739,7 +739,7 @@ int artnet_send_address(artnet_node vn,
                         const char *longName,
                         uint8_t inAddr[ARTNET_MAX_PORTS],
                         uint8_t outAddr[ARTNET_MAX_PORTS],
-                        uint8_t subAddr, artnet_port_command_t cmd) {
+                        uint8_t net, uint8_t subAddr, artnet_port_command_t cmd) {
   node n = (node) vn;
   artnet_packet_t p;
   node_entry_private_t *ent = find_private_entry(n,e);
@@ -763,7 +763,6 @@ int artnet_send_address(artnet_node vn,
     p.data.addr.opCode = htols(ARTNET_ADDRESS);
     p.data.addr.verH = 0;
     p.data.addr.ver = ARTNET_VERSION;
-    p.data.addr.filler1 = 0;
     p.data.addr.filler2 = 0;
 
     memset(p.data.addr.shortname, 0, ARTNET_SHORT_NAME_LENGTH);
@@ -777,6 +776,7 @@ int artnet_send_address(artnet_node vn,
     memcpy(&p.data.addr.swin, inAddr, ARTNET_MAX_PORTS);
     memcpy(&p.data.addr.swout, outAddr, ARTNET_MAX_PORTS);
 
+    p.data.addr.net = net;
     p.data.addr.subnet = subAddr;
     p.data.addr.swvideo = 0x00;
     p.data.addr.command = cmd;
@@ -1134,27 +1134,30 @@ int artnet_set_node_type(artnet_node vn, artnet_node_type type) {
  * Note that changing the subnet address will cause the universe addresses of all ports to change.
  *
  * @param vn the artnet_node
+ * @param net new net address
  * @param subnet new subnet address
  */
-int artnet_set_subnet_addr(artnet_node vn, uint8_t subnet) {
+int artnet_set_net_subnet_addr(artnet_node vn, uint8_t net, uint8_t subnet) {
   node n = (node) vn;
   int i, ret;
 
   check_nullnode(vn);
 
+  n->state.default_net = net;
   n->state.default_subnet = subnet;
 
   // if not under network control, and the subnet is different from the current one
-  if (!n->state.subnet_net_ctl && subnet != n->state.subnet) {
+  if (!n->state.subnet_net_ctl && (subnet != n->state.subnet || net != n->state.net)) {
+    n->state.net = net;
     n->state.subnet = subnet;
 
     // redo the addresses for each port
     for (i =0; i < ARTNET_MAX_PORTS; i++) {
-      n->ports.in[i].port_addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.in[i].port_addr & LOW_NIBBLE);
+      n->ports.in[i].port_addr = (net << 8) | ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.in[i].port_addr & LOW_NIBBLE);
       // reset dmx sequence number
       n->ports.in[i].seq = 0;
 
-      n->ports.out[i].port_addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.out[i].port_addr & LOW_NIBBLE);
+      n->ports.out[i].port_addr = (net << 8) | ((n->state.subnet & LOW_NIBBLE) << 4) | (n->ports.out[i].port_addr & LOW_NIBBLE);
     }
 
     if (n->state.mode == ARTNET_ON) {
@@ -1296,7 +1299,7 @@ int artnet_set_port_addr(artnet_node vn,
   // if not under network control and address is changing
   if (!port->net_ctl &&
       (changed || (addr & LOW_NIBBLE) != (port->addr & LOW_NIBBLE))) {
-    port->addr = ((n->state.subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
+    port->addr = n->state.net << 8 | ((n->state.subnet & LOW_NIBBLE) << 4) | (addr & LOW_NIBBLE);
 
     // reset seq if input port
     if (dir == ARTNET_INPUT_PORT)
@@ -1351,6 +1354,7 @@ int artnet_get_config(artnet_node vn, artnet_node_config_t *config) {
 
   strncpy(config->short_name, n->state.short_name, ARTNET_SHORT_NAME_LENGTH);
   strncpy(config->long_name, n->state.long_name, ARTNET_LONG_NAME_LENGTH);
+  config->net = n->state.net;
   config->subnet = n->state.subnet;
 
   for (i = 0; i < ARTNET_MAX_PORTS; i++) {
@@ -1567,15 +1571,17 @@ node_entry_private_t *find_entry_from_ip(node_list_t *nl, SI ip) {
  * @param size size of ips
  * @return number of nodes matched
  */
-int find_nodes_from_uni(node_list_t *nl, uint8_t uni, SI *ips, int size) {
+int find_nodes_from_uni(node_list_t *nl, uint16_t uni, SI *ips, int size) {
   node_entry_private_t *tmp;
   int count = 0;
   int i,j = 0;
+  uint16_t outputUniverse = 0;
 
   for (tmp = nl->first; tmp; tmp = tmp->next) {
     int added = FALSE;
     for (i =0; i < tmp->pub.numbports; i++) {
-      if (tmp->pub.swout[i] == uni && ips) {
+      outputUniverse = (tmp->pub.swout[i] & LOW_NIBBLE) | tmp->pub.sub << 4 | tmp->pub.net << 8;
+      if (outputUniverse == uni && ips) {
         if (j < size && !added) {
           ips[j++] = tmp->ip;
           added = TRUE;
@@ -1596,7 +1602,8 @@ void copy_apr_to_node_entry(artnet_node_entry e, artnet_reply_t *reply) {
   // the ip is network byte ordered
   memcpy(&e->ip, &reply->ip, 4);
   e->ver = bytes_to_short(reply->verH, reply->ver);
-  e->sub = bytes_to_short(reply->subH, reply->sub);
+  e->net = reply->net;
+  e->sub = reply->sub;
   e->oem = bytes_to_short(reply->oemH, reply->oem);
   e->ubea = reply->ubea;
   memcpy(&e->etsaman, &reply->etsaman, 2);
