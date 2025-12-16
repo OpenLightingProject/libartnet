@@ -457,6 +457,8 @@ typedef struct artnet_node_s{
   node_list_t node_list;        // node list
   firmware_transfer_t firmware; // firmware details
   node_peering_t peering;       // peer if we've joined a group
+  uint16_t receive_port;        // The network port on which we receive data.
+  uint16_t send_port;           // The network port on which we send data.
 } artnet_node_t;
 
 
