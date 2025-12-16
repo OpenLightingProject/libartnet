@@ -163,11 +163,7 @@ int artnet_tx_tod_data(node n, int id) {
   bloc = 0;
 
   while (remaining > 0) {
-#if defined(__GNUC__) && (__GNUC__ >= 7) || defined(__clang__)
-    memset(&tod.data.toddata.tod, 0x00, sizeof(tod.data.toddata.tod));
-#else
-    memset(&tod.data.toddata.tod, 0x00, ARTNET_MAX_UID_COUNT);
-#endif
+    memset(&tod.data.toddata.tod,0x00, ARTNET_MAX_UID_COUNT * ARTNET_RDM_UID_WIDTH);
     lim = min(ARTNET_MAX_UID_COUNT, remaining);
     tod.data.toddata.blockCount = bloc++;
     tod.data.toddata.uidCount = lim;
