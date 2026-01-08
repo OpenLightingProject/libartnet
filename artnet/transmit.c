@@ -116,9 +116,10 @@ int artnet_tx_tod_request(node n) {
   todreq.data.todreq.adCount = 0;
 
   // include all enabled ports
+  todreq.data.todreq.net = n->state.net;
   for (i=0; i < ARTNET_MAX_PORTS; i++) {
     if (n->ports.out[i].port_enabled) {
-      todreq.data.todreq.address[todreq.data.todreq.adCount++] = n->ports.out[i].port_addr;
+      todreq.data.todreq.address[todreq.data.todreq.adCount++] = n->ports.out[i].port_addr & LOW_BYTE;
     }
   }
 
@@ -155,7 +156,7 @@ int artnet_tx_tod_data(node n, int id) {
   // codes aren't given. The windows drivers don't have these either....
   tod.data.toddata.cmdRes = ARTNET_TOD_FULL;
 
-  tod.data.toddata.address = n->ports.out[id].port_addr;
+  tod.data.toddata.address = n->ports.out[id].port_addr & LOW_BYTE;
   tod.data.toddata.uidTotalHi = short_get_high_byte(n->ports.out[id].port_tod.length);
   tod.data.toddata.uidTotal = short_get_low_byte(n->ports.out[id].port_tod.length);
 
@@ -368,7 +369,7 @@ int artnet_tx_build_art_poll_reply(node n) {
   ar->port = htols(ARTNET_PORT);
   ar->verH = 0;
   ar->ver = 0;
-  ar->subH = 0;
+  ar->net = n->state.net;
   ar->sub = n->state.subnet;
   ar->oemH = n->state.oem_hi;
   ar->oem = n->state.oem_lo;
@@ -404,8 +405,8 @@ int artnet_tx_build_art_poll_reply(node n) {
     ar->porttypes[i] = n->ports.types[i];
     ar->goodinput[i] = n->ports.in[i].port_status;
     ar->goodoutput[i] = n->ports.out[i].port_status;
-    ar->swin[i] = n->ports.in[i].port_addr;
-    ar->swout[i] = n->ports.out[i].port_addr;
+    ar->swin[i] = n->ports.in[i].port_addr & LOW_NIBBLE;
+    ar->swout[i] = n->ports.out[i].port_addr & LOW_NIBBLE;
   }
 
   ar->swvideo  = 0;
